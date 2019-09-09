@@ -1,0 +1,124 @@
+---+ E/gamma Exercise 1
+
+The goal of this exercise is to gain some basic familarity with accessing E/gamma objects in the CMSSW framework. We will mix python and c++ techiques, python in general is faster and easier to investigate things while c++ can be faster and more robust. 
+In general the two approaches share many common elements and leasons learnt in one can carry other to the other
+
+---++ Basic Familarisation of E/gamma Objects (miniAOD)
+
+We will use miniAOD first as its the most common POG dataformat while having nice embedded information for analysis. First start a python interactive environment. 
+
+<verbatim>
+python -i EgCMSPOS2019/EgammaAnalysis/test/exercise1a.py <file.root>
+</verbatim>
+
+Now we can interactively investigate electron and photon objects. First we need a "handle" to access the electron and photon collections. The electron and photon handles have already been created in the code, all we have to do is set them to point to the correct location. As a side note, a handle is just a term for class which allows us to retreive the product data and effectively acts like a c++ pointer (and is one under the hood..).
+
+First we need to load the event we wish investigate. 
+<verbatim>
+events.to(0) #the event we wish to go to, in this case it could be other events too
+</verbatim>
+
+Now we get set the handles to the electron/photon collections
+<verbatim>
+events.getByLabel(ele_label,eles_handle)
+events.getByLabel(phos_label,phos_handle)
+</verbatim>
+
+Now to access the correct collections themselves
+<verbatim>
+eles = eles_handle.product()
+phos = phos_handle.product()
+</verbatim>
+
+This is a collection of eles and photons in the event. eles[0] is the first electron in the event, eles[1] is the second and so on (and likewise for photons). 
+
+Lets access an electron
+
+<verbatim>
+ele = eles[0]
+</verbatim>
+
+now we can play around with its varibles
+<verbatim>
+ele.energy()
+ele.superCluster().energy()
+ele.superCluster().rawEnergy()
+ele.eta()
+ele.phi()
+</verbatim>
+and so on. We can also access the pat::Electron specific userdata say, lets see if we pass the medium ID
+
+<verbatim>
+ele.electronID("cutBasedElectronID-Fall17-94X-V2-medium")
+</verbatim>
+
+We can also look at the userInt and userFloat data as well as ID variables
+<verbatim>
+ele.full5x5_sigmaIetaIeta()
+ele.deltaEtaSeedClusterTrackAtVtx()
+ele.userFloat("heepTrkId")
+ele.userInt("")
+</verbatim>
+
+Note at any time if you want to see what userdata is stored in the electron/photon, pass an empty string to userFloat, userInt, electronID/photonID functions. An exception will occur and it'll show you which ones are active. Note: dont do this in c++! or in an event loop, this is just for interactively investigating things in python. 
+
+task 1: play around the code and access a few id variables. 
+
+---++ Plotting Variables
+
+Interactively looking at individual electrons is find to get a feeling but its not very useful for analysis. So lets make some histograms! We have now added an event loop to our example python script and some histograms to plot.
+
+<verbatim>
+python -i EgCMSPOS2019/EgammaAnalysis/test/exercise1b.py <file.root>
+</verbatim>
+
+task 1:
+plot the sigmaIEtaIEta histogram
+
+task 2:
+add a histogram of hadem
+
+task 3:
+apply require the objects entering the histogram to pass the medium ID
+
+
+---++ Updating User Information
+
+E/gamma objects are created at reconstruction time with a fixed release. This means that developments which come after the release is made are not present in the electrons/photons. Most commonly theres are new ids and residual energy corrections which often depend on the release to exist first. 
+
+E/gamma has a tool which re-runs all the latest corrections and puts them in pat::Electron, pat::Photon, EgammaPostRecoTools. In framework lite, which is what was underlying our python adventures, we can not run these tools so we have two options
+  1. make a copy of the miniAOD but with updated collections and run on that
+  1. run in the full framework and and use these tools to make the updated correction on the fly...
+
+Option 1. is not very practical for diskspace reasons and means in effect you would need to rewait for a "re-miniAOD" which happen about once a year. Option 2. is much more convenient but requires us to get our hands dirty with c++. 
+
+
+
+
+
+
+
+All CMSSW code runs as c++, even if it was called with python. All CM
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
