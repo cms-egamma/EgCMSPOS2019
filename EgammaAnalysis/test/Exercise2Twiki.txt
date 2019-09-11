@@ -1,0 +1,154 @@
+%TWISTY{
+  mode="div"
+  showlink="Show Exercise 2: Electron and Photon Identification"
+  hidelink="Hide Exercise 2: Electron and Photon Identification"
+  showimgleft="%ICONURLPATH{toggleopen-small}%"
+  hideimgleft="%ICONURLPATH{toggleclose-small}%"
+}%
+
+---+ Exercise 2: Electron and Photon Identification
+
+The goal of this exercise is to understand how to use E/gamma objects in an analysis. This entales having to calibrate and select the electrons and photons. 
+ 
+Electron and photons objects have minimal identification on them, with what little selection they do have being mostly to save disk space and CPU. Therefore the majority of "electrons" and "photons" reconstructed in the data are actually jets (often refered to as fakes). To remove this background we apply a selection on key quantities which distinqush electrons & photons from hadronic jets
+
+Question: How does an electron / photon look different to a hadronic jet? What features define an electron and what features define a photon?
+
+Selections are applied on electrons/photons to distingush them from jets. There are two main types, cut based and MVA (multi-variate analysis) based. Cut based simply applies thresholds to a list of variables while an MVA produces a variable from its inputs which is a measure of how electron/photon or jet like an object is. 
+
+---++ Cut based ID
+
+We will use electrons as an example, everything that applies here also applies in general to photons. First a good starting point to learn about cut base identification is to read this twiki [[CutBasedElectronIdentificationRun2][https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedElectronIdentificationRun2]]
+
+Cuts are applied on different shower shape and isolation variables to identify an electron. For example, the following table shows the electron ID cuts for different working points.
+
+<img alt="ElectronID_94Xv2.png" height="466" src="%ATTACHURL%/ElectronID_94Xv2.png" title="ElectronID_94Xv2.png" width="1006" />
+
+---+++ ID variable investigations
+Lets look at these variables and plot them. We will do it for real electrons and jets reconstructed as electrons (commonly refered to as fakes as the jet fakes the signature of an electron).
+
+
+---+++ Applying the selection
+
+Now lets look how many electrons we have passing the selection. We can apply the selections listed in the above table manually but as you can see this is tedious and error prone. Inside CMSSW we have already calculated the selection results and stored whether an electron passed or failed the selection. This was accessed eariler by <verbatim>electronID("cutBasedElectronID-Fall17-94X-V2-tight")</verbatim>. In our ntuples we compressed this information further into a branch called eleIDbit. Lets have a look at it.
+
+This branch stores the electron ID decision in a 64 bit integer. Each bit represents a decision.<br />For electrons, five different ID decisions are stored: Veto, Loose, Medium, Tight and HEEP. So only 5 bits are important for us, other 59 bits of this integer are not used.<br />We need to represent that integer in 5 bits: b4 b3 b2 b1 b0<br />b0: Veto; b1: Loose; b2: Medium; b3: Tight and b4: HEEP<br />To access the decision for <br />(a) veto: eleIDbit[]&gt;&gt;0&1 ---&gt; gives 0 or 1. if 0--&gt; this eID is failed. if 1--&gt; this eID is passed<br />(b) Loose: eleIDbit[]&gt;&gt;1&1<br />(c) Medium: eleIDbit[]&gt;&gt;2&1<br />(d) Tight: eleIDbit[]&gt;&gt;3&1<br />(e) HEEP: eleIDbit[]&gt;&gt;4&1
+
+Open the code ggNtuplizer_electrons.cc, and search the string 'eleIDbit' to understand how the ID decisions are accessed. For example,
+
+
+<verbatim>
+bool isPassTight = iEle->t;electronID("cutBasedElectronID-Fall17-94X-V2-tight");
+if (isPassTight) setbit(tmpeleIDbit, 3);
+</verbatim>
+
+For photons it is done in a similar way. Decisions for three photon IDs are stored in phoIDbit, so 3 bits represent the decision; b2 b1 b0
+
+b0: Loose; b1: Medium; b2: Tight<br />To access the decision for <br />(a) Loose: phoIDbit[]&gt;&gt;0&1 ---&gt; gives 0 or 1. if 0--&gt; this phoID is failed. if 1--&gt; this phoID is passed<br />(b) Medium: phoIDbit[]&gt;&gt;1&1<br />(c) Tight: phoIDbit[]&gt;&gt;2&1
+
+Now let's check the electron cut-based ID . From /CMSSW_10_2_10/src/, do
+
+
+<verbatim>
+git cms-addpkg RecoEgamma /ElectronIdentification
+</verbatim>
+
+Cuts are defined in /RecoEgamma/ElectronIdentification/python/Identification/. Go to this directory and open cutBasedElectronID_Fall17_94X_V2_cff.py
+
+<br />%ICON{led-green}% Question: For tight ID in endcap, what is the missingHitsCut?
+
+---+++ Making a New Selection
+Let's assume we want to design a new WP of ID where missingHitsCut is 0, and let's say we want to call it SuperTight ID.
+
+Make necessary changes in RecoEgamma /ElectronIdentification/python/Identification/cutBasedElectronID_Fall17_94X_V2_cff.py
+
+Just copy and paste the whole block for tight ID, including idName, WP_Tight_EB, WP_Tight_EE, then change tight to supertight where ever necessary, and put missingHitsCut=0 for both barrel and endcap.
+
+Also add this line in proper place:
+
+
+<verbatim>
+cutBasedElectronID_Fall17_94X_V2_supertight = configureVIDCutBasedEleID_V5(WP_SuperTight_EB, WP_SuperTight_EE, isoInputs)
+</verbatim>
+
+Then, as instructed in the code, you should comment out the lines about registry and isPOGApproved; then run
+
+calculateIdMD5 cutBasedElectronID_Fall17_94X_V2_cff.py cutBasedElectronID_Fall17_94X_V2_supertight
+
+You will get a number, update the MD5 sum strings and uncomment the lines again. Then compile by doing scram b from /CMSSW_10_2_10/src/
+
+Then you would need to include this new ID to the ntuplizer. For that, open ggNtuplizer_electrons.cc, and make necessary changes.
+
+You need to add the following lines in proper place:
+<verbatim>
+bool isPassSuperTight = iEle->electronID("cutBasedElectronID-Fall17-94X-V2-supertight");
+if (isPassSuperTight) setbit(tmpeleIDbit, 5);
+</verbatim>
+
+So, to access the decision of superTight ID, one has to do: eleIDbit[]&gt;&gt;5&1
+
+Compile the code, and run on simulated events as before. Next, we will check the impact of tightenting the missingHit cut. Open the output root file and plot electron pT for tight and superTight electrons on same canvas.
+
+<verbatim>
+EventTree ->SetLineColor(kGreen)
+EventTree ->Draw("elePt","eleIDbit[]>>3&1") //tight in green
+EventTree ->SetLineColor(kBlue)
+EventTree ->Draw("elePt","eleIDbit[]>>5&1","sames") //super tight in blue
+</verbatim>
+
+<br />%ICON{led-green}% Question: How many electrons passed tight ID, and how many passed super tight ID? Hint: if you drag and move stat-bar, then you will see the number of events of both cases.
+
+---+++ Applying Individual Cuts of a Selection
+
+Many times it is useful to add or remove individual cuts of a selection. This could be for side band studies, removing isolation cuts or for studying the efficiency of a single cut or an "N-1" efficiency/distribution where "N-1" means "apply all N selections except the 1 under study".
+
+Our ID framework also provides a mechanism for this, for each ID we save a 32-bit int with the bits corresponding to whether an individual cut passed/failed. 
+
+For the cut based selection the summary of the bits are:
+|  *bit nr*  |  *cut*  |  *decimal*  |  *hexadecimal*  | 
+|  0  |MinPtCut  |  1  |  0x1  |
+|  1  |GsfEleSCEtaMultiRangeCut  |  2  |  0x2  |
+|  2  |GsfEleDEtaInSeedCut  |  4  |  0x4  |
+|  3  |GsfEleDPhiInCut  |  8  |  0x8  |
+|  4  |GsfEleFull5x5SigmaIEtaIEtaCut  |  16  |  0x10  |
+|  5  |GsfEleHadronicOverEMCut  |  32  |  0x20  |
+|  6  |GsfEleEInverseMinusPInverseCut  |  64  |  0x40  |
+|  7  |GsfEleEffAreaPFIsoCut  |  128  |  0x80  |
+|  8  |GsfEleConversionVetoCut  |  256  |  0x100  |
+|  9  |GsfEleMissingHitsCut  |  512  |  0x200  |
+
+|  *bit nr*  |  *cut*  |  *decimal*  |  *hexadecimal*  | 
+|  0  |MinPtCut  |  1  |  0x1  |
+|  1  |GsfEleSCEtaMultiRangeCut  |  2  |  0x2  |
+|  2  |GsfEleDEtaInSeedCut  |  4  |  0x4  |
+|  3  |GsfEleDPhiInCut  |  8  |  0x8  |
+|  4  |GsfEleFull5x5SigmaIEtaIEtaWithSatCut  |  16  |  0x10  |
+|  5  |GsfEleFull5x5E2x5OverE5x5WithSatCut  |  32  |  0x20  |
+|  6  |GsfEleHadronicOverEMLinearCut  |  64  |  0x40  |
+|  7  |GsfEleTrkPtIsoCut  |  128  |  0x80  |
+|  8  |GsfEleEmHadD1IsoRhoCut  |  256  |  0x100  |
+|  9  |GsfEleDxyCut  |  512  |  0x200  |
+|  10  |GsfEleMissingHitsCut  |  1024  |  0x400  |
+|  11  |GsfEleEcalDrivenCut  |  2048  |  0x800  |
+
+Here it is most convenient to work in hexadecimal as it makes it easier to add or remove cuts. For example say we wanted to require just the GsfEleFull5x5SigmaIEtaIEtaCut and GsfEleHadronicOverEMCut cuts, we just sum the numbers which is easier in hex, its 0x10+0x20 = 0x30. Adding the missing hits cut, we get 0x230. All cuts is 0x3FF. All cuts except sigmaIEtaIEta is 0x3EF. Of course nothing stops us working in decimal but 0x230 is much more clear to me than 560 to see which bits are set. This will seem to be difficult and confusing at first but trust me, its well worth mastering how to do bit manitipulation like this.
+
+In cmssw this is accessed as <verbatim> userInt("cutBasedElectronID-Fall17-94X-V2-tight")</verbatim> and in our ntuples we stored it as <verbatim>eleIDbits[]</verbatim> with the same order as above. 
+
+
+Now lets apply the sigmaIEtaIEta cut of the tight ID
+<verbatim>
+EventTree->Draw("eleSigmaIEtaIEtaFull5x5","(eleIDbits[][3]&0x10)!=0 && eleGenPt!=0 && elePt>20","")
+</verbatim>
+Notice how the eleSigmaIEtaIEtaFull5x5 distribution is truncated at the cut value.
+
+Exercises:
+   1. apply a selection of all cuts 
+   1. apply a selection of all cuts except sigmaIEtaIEta
+   1. apply a selection of all cuts except isolation
+
+
+
+
+%ENDTWISTY%
+

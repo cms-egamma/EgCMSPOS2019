@@ -1,0 +1,157 @@
+%TWISTY{
+  mode="div"
+  showlink="Show Exercise 3: Energy Corrections"
+  hidelink="Hide Exercise 3: Energy corrections"
+  showimgleft="%ICONURLPATH{toggleopen-small}%"
+  hideimgleft="%ICONURLPATH{toggleclose-small}%"
+}%
+
+
+
+---+ Exercise 3: Energy Corrections
+
+This exercise will teach you about energy corrections in CMS
+
+Energy correction flow of e/gamma objects is the following:
+
+<img alt="Screen_Shot_2018-04-16_at_7.42.02_pm.png" height="140" src="%ATTACHURL%/Screen_Shot_2018-04-16_at_7.42.02_pm.png" title="Screen_Shot_2018-04-16_at_7.42.02_pm.png" width="464" />
+
+This is taken from https://twiki.cern.ch/twiki/pub/CMS/SWGuideCMSPhysicsObjectSchoolBARI2017EGamma/CMSPOS2017-Part2.pdf by L. Soffi, presented in CMS physics object school in Bari in 2017.
+
+So as you can see, there are several levels at which corrections are applied. In this exercise, we will not learn all the levels of corrections. We will learn two most important levels of corrections for electrons and photons:
+   * Refined Super-Cluster (SC) corrections: Needed to take care of energy lost in gaps, cracks etc
+   * Residual data-MC corrections(also performed on refined SCs): Needed for *good* data-MC agreement
+
+To start learning about it, we first need to run the *run_mc2017_94X.py* . Before we run it, let's have a look at the *ggNtuplizer_electrons.cc*. For today's exercise, we access three energy variables:
+
+   * Raw energy: no regression, no data-MC scale corrections
+   * Energy post regression, but no data-MC scale corrections
+   * Energy post regression AND post data-MC scale corrections
+
+Ways to access the above 3 variables (see in *ggNtuplizer_electrons.cc*) <br />%GREENBG% Raw energy:
+<verbatim>eleSCRawEn_         .push_back(iEle->superCluster()->rawEnergy());</verbatim>
+
+Energy post regression:
+<verbatim>eleSCEn_            .push_back(iEle->superCluster()->energy());</verbatim>
+
+Energy post regression AND post data-MC scale corrections:
+<verbatim>eleCalibEn_         .push_back(iEle->userFloat("ecalEnergyPostCorr"));</verbatim>
+
+<br />%ENDBG%
+
+So now we know which variables are important and how to run, let's do the following:
+
+<br />%REDBG%
+<verbatim>First change the input file to: /store/mc/RunIIFall17MiniAODv2/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/0CAD0E35-8B42-E811-99FD-008CFAC91E10.root
+ Those who do not have the grid password, can access from here: /eos/cms/store/group/phys_egamma/tnp/0CAD0E35-8B42-E811-99FD-008CFAC91E10.root </verbatim>
+
+<br />%ENDBG%
+
+Now run like this: <br />%REDBG%
+<verbatim>cmsRun run_mc2017_94X.py</verbatim>
+
+<br />%ENDBG%
+
+You will get a root file: *ggtree_mc.root*. OR you can copy from here: ~shilpi/public/ggtree_mc.root
+
+<br />%GREEN% To analyze the above rootfile, we need to download the following:
+
+   * [[%ATTACHURL%/EGMregression.C][EGMregression.C]]: Codes to run EGM regression exercise&lt;/verbatim&gt;
+
+   * [[%ATTACHURL%/EGMregression.h][EGMregression.h]]: Codes to run EGM regression exercise&lt;/verbatim&gt;
+
+%ENDCOLOR%
+
+Run the above like this: <br />%REDBG%
+<verbatim>
+root -l -b
+.L EGMregression.C
+EGMregression t
+t.Loop(0)</verbatim>
+
+<br />%ENDBG%
+
+You will get a root file named *histo_mc.root*
+
+Let's start checking things one by one.
+
+   1 Compare the raw energy with the energy from EGM regression (i.e. before scale and smearing).
+%REDBG%
+<verbatim>
+root -l histo_mc.root 
+hrawE->SetLineColor(1);
+hrawE->SetLineWidth(2);
+hrawE->Draw()
+hcorrE->SetLineColor(2);
+hcorrE->SetLineWidth(2);
+hcorrE->Draw("sames");</verbatim>
+
+<br />%ENDBG%
+
+You will see something like this:
+
+* Raw Energy and Corrected energy (before scale and smearing): <br /> <img alt="plot_rawEAndCorrE.png" height="475" src="%ATTACHURLPATH%/plot_rawEAndCorrE.png" width="698" />&lt;/verbatim&gt;
+
+<br />%RED% Question: What is the level of corrections? Hint: For each event, calculate the ratio of raw energy to the corrected energy and fill in a histogram.
+
+   1 Form the Z mass using two electrons. This is needed to be done using the above 3 definitions of energies. So the task is to compare the masses from the above 3 definitions by plotting on one canvas. histo_mc.root already has these masses formed. Plot the 3 masses as follows:
+
+%REDBG%
+<verbatim>
+root -l histo_mc.root 
+hrawM->SetLineColor(1);
+hrawM->SetLineWidth(2);
+hegmRM->SetLineColor(2);
+hegmRM->SetLineWidth(2);
+hcalibM->SetLineColor(3);
+hcalibM->SetLineWidth(2);
+hcalibM->Draw();
+hegmRM->Draw("sames");
+hrawM->Draw("sames");</verbatim>
+
+<br />%ENDBG%
+
+You will see something like this:
+
+* Di-electron invariant mass using the 3 definitions of energy: <br /> <img alt="plot_3Masses.png" height="475" src="%ATTACHURLPATH%/plot_3Masses.png" width="698" />&lt;/verbatim&gt;
+
+<br />%RED% Question: Which one is nearer to the Z peak and which one has the best resolution?
+
+NEXT: Repeat the above same exercise for Data as is done for MC.
+
+For this, take the input root file to be:
+
+<br />%REDBG%
+<verbatim>
+Input root file: /store/data/Run2017C/SingleElectron/MINIAOD/31Mar2018-v1/60000/26B0FDF4-B537-E811-824C-44A842CFCA00.root
+
+and run: cmsRun run_data2017_94X.py</verbatim>
+
+<br />%ENDBG%
+
+The output root file is: ggtree_data.root (or you can copy from here: ~shilpi/public/ggtree_data.root) To analyze the above root file, run
+
+<br />%REDBG%
+<verbatim>
+root -l -b
+.L EGMregression.C
+EGMregression t
+t.Loop(1)</verbatim>
+
+<br />%ENDBG%
+
+*Note the 1 in the argument of Loop(1)*
+
+Link to slides: * [[%ATTACHURL%/egmRegression.pdf][egmRegression.pdf]]: Slides of EGM regression&lt;/verbatim&gt;
+
+To compare the mass histograms in data and MC, you need to do this:
+<verbatim>
+root -l -b histo_mc.root histo_data.root
+hegmRM->SetLineColor(1);
+hegmRM->SetLineWidth(2);
+hegmRM->Draw();
+_file0->cd()
+hegmRM->SetLineColor(2);
+hegmRM->SetLineWidth(2);
+hegmRM->Draw("sames");</verbatim>
+

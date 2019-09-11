@@ -1,4 +1,11 @@
----+ E/gamma Exercise 1
+%TWISTY{
+  mode="div"
+  showlink="Show Exercise 1: Introduction"
+  hidelink="Hide Exercise 1: Introduction"
+  showimgleft="%ICONURLPATH{toggleopen-small}%"
+  hideimgleft="%ICONURLPATH{toggleclose-small}%"
+}%
+---+ E/gamma Exercise 1: General Introduction
 
 The goal of this exercise is to gain some basic familarity with accessing E/gamma objects in the CMSSW framework. We will mix python and c++ techiques, python in general is faster and easier to investigate things while c++ can be faster and more robust. 
 In general the two approaches share many common elements and leasons learnt in one can carry other to the other
@@ -87,38 +94,113 @@ apply require the objects entering the histogram to pass the medium ID
 E/gamma objects are created at reconstruction time with a fixed release. This means that developments which come after the release is made are not present in the electrons/photons. Most commonly theres are new ids and residual energy corrections which often depend on the release to exist first. 
 
 E/gamma has a tool which re-runs all the latest corrections and puts them in pat::Electron, pat::Photon, EgammaPostRecoTools. In framework lite, which is what was underlying our python adventures, we can not run these tools so we have two options
-  1. make a copy of the miniAOD but with updated collections and run on that
-  1. run in the full framework and and use these tools to make the updated correction on the fly...
+   * make a copy of the miniAOD but with updated collections and run on that
+   * run in the full framework and and use these tools to make the updated correction on the fly
 
-Option 1. is not very practical for diskspace reasons and means in effect you would need to rewait for a "re-miniAOD" which happen about once a year. Option 2. is much more convenient but requires us to get our hands dirty with c++. 
-
-
+We will now show both approaches. They both have their advantages and disadvantages. The first option is not very practical for diskspace reasons and means in effect you would need to rewait for a "re-miniAOD" which happen about once a year. The second option is much more convenient but requires us to get our hands dirty with c++. 
 
 
+---+++ Generating Updated MiniAOD
+<to be filled>
+
+---+++ Ntuplising inside full CMSSW framework
+
+We will use the ggAnalysis code to do Option 2 for us and produce ntuples from the objects we have been using. 
+
+<verbatim>
+cmsrel CMSSW_10_2_10
+cd CMSSW_10_2_10/src/
+cmsenv
+git cms-init
+git cms-merge-topic cms-egamma:EgammaPostRecoTools
+git cms-merge-topic cms-egamma:PhotonIDValueMapSpeedup1029
+git cms-merge-topic cms-egamma:slava77-btvDictFix_10210
+git cms-addpkg EgammaAnalysis/ElectronTools
+rm EgammaAnalysis/ElectronTools/data -rf
+git clone https://github.com/cms-data/EgammaAnalysis-ElectronTools.git EgammaAnalysis/ElectronTools/data
+scram b -j 8
+git cms-merge-topic cms-met:METFixEE2017_949_v2_backport_to_102X
+git clone https://github.com/cmkuo/HiggsAnalysis.git
+git clone -b 102X https://github.com/cmkuo/ggAnalysis.git
+scram b -j 8
+</verbatim>
+
+Check what the ntuplizer is doing for electrons in ggAnalysis/ggNtuplizer/plugins/ggNtuplizer_electrons.cc and for photons in ggAnalysis/ggNtuplizer/plugins/ggNtuplizer_photons.cc. Look at the following snippet from ggNtuplizer_electrons.cc,
+
+<img alt="eleCode.png" height="547" src="%ATTACHURL%/eleCode.png" title="eleCode.png" width="938" />
+
+You can see that:
+   * some quanties are taken from the electron directly, e.g. iEle-&gt;charge()
+   * some are taken from the referenced GsfTrack, e.g. iEle-&gt;gsfTrack()-&gt;dz(pv)
+   * some are taken from the referenced ECAL SuperCluster, e.g. iEle-&gt;superCluster()-&gt;energy()
+   * some are floats which are done at the MINIAOD production level, e.g. iEle-&gt;userFloat("ecalEnergyPostCorr")
+
+All this is completely analogous to we were doing in our interactive python session, its the same function names which return the same results. However you may notice that we now sometimes swap "." for "-&gt;", for example in python we had "superCluster().energy()" and now in c++ we have "superCluster()-&gt;energy()". This because c++ has the concept of "pointers" for which "-&gt;" means "access the method of the object we are pointing to" while python everything is a reference variable. Depending on your level of c++ knowledge, this will either make complete or no sense to you. Dont worry, it'll become clear in time if it isnt already.
 
 
+<!--For acceptance or efficiency studies it is better to use the electron supercluster eta, while for momentum estimation for electrons one needs to use the electron eta directly, coming from the track (they are different since supercluster eta is a geometric quantity related to position of the cluster, while electron eta depends on the track direction and is also more precise).-->
 
-All CMSSW code runs as c++, even if it was called with python. All CM
+Now run the ntuplizer on a root file from the 2018A rereco dataset /EGamma/Run2018A-22Jun2018-v1/MINIAOD .
 
+<verbatim>
+cd $CMSSW_BASE/src/ggAnalysis/ggNtuplizer/test
+</verbatim>
 
+Now open run_data2018_102X.py, and put one root file as input, for example this one:
 
+[[https://cmsweb.cern.ch/das/request?input=file%3D%2Fstore%2Fdata%2FRun2018A%2FEGamma%2FMINIAOD%2F22Jun2018-v1%2F00000%2F0E5ECE48-EC78-E811-9B87-FA163EBA050E.root&instance=prod/global][/store/data/Run2018A/EGamma/MINIAOD/22Jun2018-v1/00000/0E5ECE48-EC78-E811-9B87-FA163EBA050E.root]]
 
+Now invoke the proxy
 
+<verbatim>
+voms-proxy-init -voms cms
+</verbatim>
 
+<verbatim>
+cmsRun run_data2018_102X.py
+</verbatim>
 
+Open ggtree_data.root, and have a close look.
 
+<verbatim>
+root -l ggtree_data.root
+ggNtuplizer->cd()
+EventTree->Print()
+EventTree->Draw("nEle")
+EventTree->Draw("eleR9","eleR9>0")
+EventTree->Draw("eleHoverE")
+EventTree->Draw("eleSigmaIEtaIEtaFull5x5")
+</verbatim>
 
+Now run on simulated sample, which is enriched in real electron. This dataset is suitable:
 
+/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v1/MINIAODSIM
 
+Take one root file from this dataset, for example this one:
 
+[[https://cmsweb.cern.ch/das/request?input=file%3D%2Fstore%2Fmc%2FRunIIAutumn18MiniAOD%2FDYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8%2FMINIAODSIM%2F102X_upgrade2018_realistic_v15-v1%2F00000%2FF1B849B9-9B5D-1041-B5CD-73DB6C24072A.root&instance=prod/global][/store/mc/RunIIAutumn18MiniAOD/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/102X_upgrade2018_realistic_v15-v1/00000/F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root]]
 
+Put this root file in run_mc2018_102X.py, and run it .
 
+Take a look at output root file, ggtree_mc.root
 
+<verbatim>
+root -l ggtree_mc.root
+ggNtuplizer->cd()
+EventTree->Print()
+EventTree->Draw("nEle")
+EventTree->Draw("eleR9","eleR9>0")
+EventTree->Draw("eleHoverE")
+EventTree->Draw("eleSigmaIEtaIEtaFull5x5")
+</verbatim>
 
+<br>%ICON{led-green}% Question: Why there are two peaks in eleSigmaIEtaIEtaFull5x5 plot?
 
+Also check the isolation variables:
 
+<verbatim>
+EventTree->Draw("elePFChIso")
+EventTree->Draw("elePFNeuIso")
+</verbatim>
 
-
-
-
-
+%ENDTWISTY%
