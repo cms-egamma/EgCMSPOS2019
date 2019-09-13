@@ -1,7 +1,7 @@
 %TWISTY{
   mode="div"
-  showlink="Show Exercise 1: Introduction"
-  hidelink="Hide Exercise 1: Introduction"
+  showlink="Show Exercise 4: Tag and Probe"
+  hidelink="Hide Exercise 4: Tag and Probe"
   showimgleft="%ICONURLPATH{toggleopen-small}%"
   hideimgleft="%ICONURLPATH{toggleclose-small}%"
 }%

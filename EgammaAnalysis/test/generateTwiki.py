@@ -40,6 +40,7 @@ if __name__ == "__main__":
     body_txt="""
 ---+ CMS Physics Object School 2019 in Aachen: E/gamma long exercise
 <noautolink> 
+
 Tutors: Sam James Harper and Swagata Mukherjee
 
 Electrons and photons play a crucial role in the success of CMS. They were vital in the discovery of the Higgs boson and play an important role in searches for new physics, including many models of supersymmetry. The design of the CMS detector, featuring a high-resolution electromagnetic calorimeter (ECAL) and an excellent tracker, provide clean identification and good energy and momentum resolution of these physics objects. In this exercise, we will examine electron and photon identification and study how these objects are used in physics analyses.
@@ -60,8 +61,10 @@ Exercises are below:
 
 {ex5}
 
+{ex6}
+
  </noautolink>
 
-""".format(ex1=ex1,ex2=ex2,ex3=ex3,ex4=ex4,ex5=ex5)
+""".format(ex1=ex1,ex2=ex2,ex3=ex3,ex4=ex4,ex5=ex5,ex6=ex6)
 
     print body_txt

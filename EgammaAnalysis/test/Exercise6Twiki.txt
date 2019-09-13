@@ -1,0 +1,41 @@
+%TWISTY{
+  mode="div"
+  showlink="Show Exercise 6: Electron and Photon Triggers (Bonus Exercise)"
+  hidelink="Hide Exercise 6: Electron and Photon Triggers (Bonus Exercise)"
+  showimgleft="%ICONURLPATH{toggleopen-small}%"
+  hideimgleft="%ICONURLPATH{toggleclose-small}%"
+}%
+
+---+ Exercise 6: Electron and Photon Triggers (Bonus Exercise)
+
+In 2018, we had the following triggers that are widely used in various CMS analyses.
+
+Single electron (isolated): HLT_Ele32_WPTight_Gsf_v
+
+Single electron (non-isolated): HLT_Ele115_CaloIdVT_GsfTrkIdT_v, HLT_Ele50_CaloIdVT_GsfTrkIdT_PFJet165_v
+
+Double electron (loosely isolated): HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v
+
+Double electron (non-isolated): HLT_DoubleEle25_CaloIdL_MW_v
+
+Single photon: HLT_Photon200_v
+
+Double photon: HLT_DoublePhoton70_v
+
+Read this paper for more detailed information on CMS trigger system https://arxiv.org/pdf/1609.02366.pdf
+
+For trigger efficiency (in 2017), see this: DP2018_030.pdf
+
+We will now check e/gamma high level trigger rates for the run number 317683. Click on https://cmsoms.cern.ch/cms/triggers/hlt_rates. 
+Input this run number, and click on a trigger name to view the trigger rate in Hz as a function of lumi-section. Also check the rate vs pile-up plots.
+
+<br />%ICON{led-green}% Question: What was the average rate of HLT_Ele32_WPTight_Gsf_v trigger in this run?
+<br />%ICON{led-green}% How does rate of HLT_Ele32_WPTight_Gsf_v depends on number of PU?
+
+Now, for L1 rates, go to https://cmsoms.cern.ch/cms/triggers/l1_rates
+
+Click on any egamma L1 trigger, eg. L1_SingleEG45er2p5, and check the rate w.r.t lumi section.
+
+<br />%ICON{led-green}% Question: What is the average rate of this L1 trigger?
+
+%ENDTWISTY%

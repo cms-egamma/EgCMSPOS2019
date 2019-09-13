@@ -12,7 +12,7 @@ The goal of this exercise is to understand how to use E/gamma objects in an anal
  
 Electron and photons objects have minimal identification on them, with what little selection they do have being mostly to save disk space and CPU. Therefore the majority of "electrons" and "photons" reconstructed in the data are actually jets (often refered to as fakes). To remove this background we apply a selection on key quantities which distinqush electrons & photons from hadronic jets
 
-Question: How does an electron / photon look different to a hadronic jet? What features define an electron and what features define a photon?
+<br>%ICON{led-green}% Question: How does an electron / photon look different to a hadronic jet? What features define an electron and what features define a photon?
 
 Selections are applied on electrons/photons to distingush them from jets. There are two main types, cut based and MVA (multi-variate analysis) based. Cut based simply applies thresholds to a list of variables while an MVA produces a variable from its inputs which is a measure of how electron/photon or jet like an object is. 
 

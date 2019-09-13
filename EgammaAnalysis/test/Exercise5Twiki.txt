@@ -1,0 +1,66 @@
+%TWISTY{
+  mode="div"
+  showlink="Show Exercise 5: Electron MVA ID training"
+  hidelink="Hide Exercise 5: Electron MVA ID training"
+  showimgleft="%ICONURLPATH{toggleopen-small}%"
+  hideimgleft="%ICONURLPATH{toggleclose-small}%"
+}%
+
+---+ Exercise 5: Electron MVA ID training
+
+(Many thanks to Jonas Rembser for preparing this tutorial)
+
+You will mainly follow the instructions from here https://github.com/guitargeek/ElectronMVATutorial
+
+Some tips, suggestions and explanations are given below:
+
+Here you will use XGBoost for training. 
+XGBoost stands for eXtreme Gradient Boosting, and it is an open-source software library.
+The reasons to use XGBoost are :
+Execution Speed and Model Performance.
+
+Read more from here: https://xgboost.readthedocs.io/en/latest/
+and this paper: https://arxiv.org/abs/1603.02754
+
+In the ntuplizing step, you can use this root file:
+
+<verbatim>
+/store/mc/Run3Summer19MiniAOD/DYJets_incl_MLL-50_TuneCP5_14TeV-madgraphMLM-pythia8/MINIAODSIM/2023Scenario_106X_mcRun3_2023_realistic_v3-v1/270000/222889F5-1E13-F34C-B312-B9B102119CBB.root
+</verbatim>
+
+Use all events from this root file so that you have enough events for training.
+
+Once you have the ntuple, you will switch to SWAN notebook to work there. The notebook is available here:
+https://github.com/guitargeek/ElectronMVATutorial/blob/master/ElectronMVATutorial.ipynb
+but you need to open it from SWAN.
+
+In the first block, you should put your own CERN username.
+
+<verbatim>
+username = "your_username"
+</verbatim>
+
+In the next block, before importing uproot you need to install it, which is done like this:
+
+<verbatim>
+!pip install --user uproot
+</verbatim>
+
+Comment out the line 
+<verbatim>
+ls /eos/user/....
+</verbatim>
+
+Copy the ntuple you produced in your eos area. For example, I have it here:
+<verbatim>
+/eos/user/s/swmukher/electron_ntuple.root
+</verbatim>
+
+Your code should point to your ntuple location, for example,
+<verbatim>
+root_files = glob.glob("/eos/user/s/swmukher/electron_ntuple.root")
+</verbatim>
+
+In the last step you will see that the ROC curves are not smooth. This is because of low statistics in ntuple. 
+
+%ENDTWISTY%
