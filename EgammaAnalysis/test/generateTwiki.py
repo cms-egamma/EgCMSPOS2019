@@ -8,6 +8,8 @@ if __name__ == "__main__":
     parser.add_argument('--ex1',help='ex1 filename')
     parser.add_argument('--ex2',help='ex2 filename')
     parser.add_argument('--ex3',help='ex3 filename')
+    parser.add_argument('--ex4',help='ex4 filename')
+    parser.add_argument('--ex5',help='ex5 filename')
     args = parser.parse_args()
 
     with open(args.ex1) as f:
@@ -16,7 +18,16 @@ if __name__ == "__main__":
         ex2 = f.read()
     with open(args.ex3) as f:
         ex3 = f.read()
-
+    if args.ex4:
+        with open(args.ex4) as f:
+            ex4 = f.read()
+    else:
+        ex4 = ""
+    if args.ex5:
+        with open(args.ex5) as f:
+            ex5 = f.read()
+    else:
+        ex5 = ""
 
 
     body_txt="""
@@ -38,8 +49,12 @@ Exercises are below:
 
 {ex3}
 
+{ex4}
+
+{ex5}
+
  </noautolink>
 
-""".format(ex1=ex1,ex2=ex2,ex3=ex3)
+""".format(ex1=ex1,ex2=ex2,ex3=ex3,ex4=ex4,ex5=ex5)
 
     print body_txt

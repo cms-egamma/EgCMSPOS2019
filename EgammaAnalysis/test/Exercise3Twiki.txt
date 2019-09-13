@@ -1,16 +1,103 @@
 %TWISTY{
   mode="div"
-  showlink="Show Exercise 3: Energy Corrections"
-  hidelink="Hide Exercise 3: Energy corrections"
+  showlink="Show Exercise 3: Understanding Electron/Photon Energy Measurements"
+  hidelink="Hide Exercise 3: Understanding Electron/Photon Energy Measurements"
   showimgleft="%ICONURLPATH{toggleopen-small}%"
   hideimgleft="%ICONURLPATH{toggleclose-small}%"
 }%
 
 
 
----+ Exercise 3: Energy Corrections
+---+ Exercise 3: Understanding Electron/Photon Energy Measurements"
 
-This exercise will teach you about energy corrections in CMS
+This exercise will teach you about e/gamma energies estimates in CMS.
+
+---++ Energy Measurements
+An electrons energy is measured by the calorimeter while its momentum is measured by the tracker. As electrons have to have at least 4 GeV of energy in CMS, the 0.511 MeV mass of the electron can be safely neglected and we can take the electrons energy to be equal to its momentum. A photon has no track so only its energy can be measured.
+
+Like always, we will focus on the electrons as given they have a track they are the more interesting of the two oobjects.  
+
+---++ ECAL Energy Measurement
+As we discussed, individual energy deposits in the calorimeter are summed into clusters of hits (PFClusters) and then those clusters are clustered into SuperClusters to represent the initial electron before undergoing showering. Lets look into some energy measurements
+
+First we will investigate the energy of the resolution of just summing directly the ECAL energy deposits (rec-hits). We will do this first for the seed cluster and the supercluster and compare them to the true energy of the electron (which we know as this is Monte Carlo simulation).
+
+<verbatim>
+eleSCRawEn_         .push_back(iEle->superCluster()->rawEnergy());
+eleSeedRawEn_.push_back(iEle->superCluster()->seed()->energy());	
+</verbatim>
+
+exercise2. plot the ratio of each raw energy to the true or gen energy of the electron. What do you notice about this? How does the supercluster energy compare to the seed cluster energy?
+
+---++ ECAL Energy Corrections
+
+As you have no doubt seen from exercise1, just taking our perfectly calibrated ecal energy deposits and summing them up is not giving the precision we need. 
+
+There are many ways the energy of the electron in the ecal can not end up absorbed in the ECAL. For example, we apply noise cuts on the ECAL rec-hits to enter PF clusters. Anything below that threshold is simply discarded meaning we will recover less of the electrons energy. 
+
+question: what other mechanisms lead to an incorrect measurement of energy ?
+
+
+
+How we address this is we use a semi-parametric boosted decision tree (BDT) trained on a sample of electrons and photons to estimate 
+
+
+
+There are three ecal energy corrections
+   * PF ECAL cluster correction: 
+      * these are basic corrections which correct a given PF cluster to the response expected if it were a single em particle. Mostly corrects for ECAL rec-hit thresholds. 
+      * the refined supercluster's energy the sum of corrected energy of its consistuent PF clusters
+   * Mustache super cluster correction:
+      * applies to the mustache superclusters. You can safely ignore for now, in analysis you will always work with refined superclusters and this is only mentioned for completeness
+   * Electron / Photon correction:
+      * applied on top of the refined supercluster energy of the electron/photon. Note, it is not stored in the supercluster itself but as the ecal energy of the electron/photon
+      * electrons & photons have seperately trained corrections
+      * this is the energy you will use and it represents the best possible correction
+
+
+We will now look at the corrected energy variables 
+<verbatim>
+eleSeedCorrEn_      .push_back(iEle->superCluster()->seed()->correctedEnergy());
+eleSCEn_            .push_back(iEle->superCluster()->energy());
+eleEcalEn_          .push_back(iEle->ecalEnergy()); 
+</verbatim>
+
+The first is the seed cluster corrected energy, the second is the supercluster corrected energy (which is the sum of the seed cluster corrected energies) and the final is the fully corrected energy of the supercluster which is known as the electrons ecal energy. Note if this was a photon "ecalEnergy" would just be "energy" 
+
+exercise 2: plot all these variables (with the raw energy for comparison). What do you notice?
+
+---++ Tracker Momentum Measurements
+
+As, for our purposes, the electron can be assumed as massless, the tracker gives a second measurement of the electrons energy. Lets look at our two momentum measurements, the momentum as measured at the inner most layer of the track (p_in) and the momentum measured at the outer most layer of the tracker (p_out).
+
+<verbatim>
+eleGsfTrkPInn_.push_back(iEle->trackMomentumAtVtx().r());
+eleGsfTrkPOut_.push_back(iEle->trackMomentumOut().r());
+</verbatim>
+
+exercise 3: now plot these variables, what do you notice? Compare the inner momentum resolution to the ecal energy for  10 <genPt<15 GeV and 30<genPt<50. Which is better for which energy range?
+
+
+---++ Track-ECAL combination
+
+The tracker and ECAL have complimentary measurements of the electrons energy so we can combine these them to improve the resolution. This is done by doing a standard error weighted combination of the two measurements and then correcting it via a further energy correction similar to what we did for the calorimeter only energy. 
+
+This energy is what is stored as the electrons energy and is accessed by 
+<verbatim>
+eleEn_              .push_back(iEle->energy());
+</verbatim>
+It is also equivalent to "p4().E()"
+
+As we measured the electrons 
+
+
+
+
+
+
+
+
+
 
 Energy correction flow of e/gamma objects is the following:
 
