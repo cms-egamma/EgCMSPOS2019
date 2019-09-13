@@ -1,0 +1,110 @@
+%TWISTY{
+  mode="div"
+  showlink="Show Exercise 1: Introduction"
+  hidelink="Hide Exercise 1: Introduction"
+  showimgleft="%ICONURLPATH{toggleopen-small}%"
+  hideimgleft="%ICONURLPATH{toggleclose-small}%"
+}%
+---+ E/gamma Exercise 4: Tag and probe
+
+The Tag and Probe is a generic method that uses narrow di-lepton resonances like Z or J/Psi to measure any sort of per-object 
+efficiencies (reconstruction, trigger or identification). The tag has a tight selection that has a low fake rate and the probe has a selection that is similar 
+or looser than the efficiency that is being measured. An invariant mass ensures a sample with high purity so that the loose probe selection is almost background free.
+
+If you are unfamiliar with Tag and Probe, then read this twiki https://twiki.cern.ch/twiki/bin/view/CMSPublic/TagAndProbe .
+
+First we need to make ntuples by running on data and MC. 
+
+<verbatim>
+mkdir egammapog_ntuplizer
+cd egammapog_ntuplizer
+cmsrel CMSSW_10_2_5
+cd CMSSW_10_2_5/src
+cmsenv
+git cms-merge-topic cms-egamma:EgammaID_1023 #if you want the V2 IDs, otherwise skip
+git cms-init
+scram b -j8
+git clone -b Nm1 https://github.com/swagata87/EgammaAnalysis-TnPTreeProducer EgammaAnalysis /TnPTreeProducer
+cd EgammaAnalysis /TnPTreeProducer/
+cmsRun python/TnPTreeProducer_cfg.py doEleID=True doPhoID=True isMC=False maxEvents=5000
+</verbatim>
+
+TnPTree_data.root is produced
+
+<verbatim>
+cmsRun python/TnPTreeProducer_cfg.py doEleID=True isMC=True maxEvents=5000
+</verbatim>
+
+TnPTree_mc.root is produced
+
+Open TnPTree_data.root, and go to tnpEleIDs folder.
+
+<br>%ICON{led-green}% Question: Check the branch passingTight94XV2. What does the 2 bins mean? Similarly, open passingVeto94XV2, and explain the meaning of 2 bins.
+<br>%ICON{led-green}% Question: Open TnPTree_mc.root, and go to tnpEleIDs folder. Click on pair_mass branch. This is dielectron invariant mass. Do you see a peak around 90 GeV? Which particle it is?
+<br>%ICON{led-green}% Question: Click on the branch truePU. What is the mean of this distribution? Click on the next branch event_nPV. What is the mean? Why the mean is lower in this case?
+<br>%ICON{led-green}% Question: Check the distributions event_PrimaryVertex_x, event_PrimaryVertex_y, event_PrimaryVertex_z, and note their Std Dev. Why event_PrimaryVertex_z has higher Std. Dev?
+
+In next step ID efficiency will be measured using these ntuples and using Tag and Probe technique. 
+
+---+++ ID efficiency and scale factor
+
+From CMSSW_10_2_5/src/, do
+
+<verbatim>
+cmsenv
+git clone -b egm_tnp_Prompt2018_102X_10222018_MC102XECALnoiseFix200kRelVal git@github.com:swagata87/egm_tnp_analysis.git
+cd egm_tnp_analysis/
+</verbatim>
+
+Open file etc/inputs/tnpSampleDef.py and have a look at the input files on which you are going to run this setup. 
+We are using ntuples with full statistics for better results.
+Also check this file etc/config/settings_ele.py , to have an idea of the cuts applied.
+Now compile,
+
+<verbatim>
+make
+</verbatim>
+
+We will check the efficiency of tight working point of Cut based electron ID.
+
+<verbatim>
+python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --checkBins
+python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --createBins
+python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --createHists
+</verbatim>
+
+The createHists step might take some time. While it is running, you can check tnpEGM_fitter.py code, and figure out what each step is doing.
+
+<verbatim>
+python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --doFit
+</verbatim>
+
+The following 3 steps are time consuming, it is for systematics and not absolutely necessary for this exercise.
+
+<verbatim>
+[skip] python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --doFit --mcSig --altSig
+[skip] python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --doFit --altSig
+[skip] python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --doFit --altBkg
+</verbatim>
+
+Do the next step,
+<verbatim>
+python tnpEGM_fitter.py etc/config/settings_ele.py --flag passingTight94XV2 --doFit --sumUp
+</verbatim>
+
+Check the plots inside /egm_tnp_analysis/results/Data2018/tnpEleID/runA/passingTight94XV2. The SF plot is important, have a look at 
+EleID_SFvspT_passingTight94XV2.pdf. Check the fits, some of these plots are important for your final presentation on Friday.
+Now do the same for loose working point passingLoose94XV2, and compare the efficiency plots side by side.
+
+<br>%ICON{led-green}% Question: Which working point have higher efficiency? How different is the scale factor in these two cases?
+
+Open etc/config/settings_ele.py, and find the section of code where eta and pT binning is defined. Now we want to do a binning of number of vertices 
+instead of pT, to see how the efficiency changes with increasing pile-up. So replace the pT binning with truePU binning. You need to replace el_pt by truePU, 
+and the following binning can be used [0,20,30,40,50,60,100]. Also, replace the fine binning in eta with a coarser binning of |eta|, which reflects only barrel 
+and endcap. Replace el_sc_eta by fabs(el_sc_eta), and the binning can be this: [0.0, 1.4442, 2.5].
+
+Now run for tight working point, and open the txt file containing efficiencies.
+
+<br>%ICON{led-green}% Question: How does the efficiency chage w.r.t number of pile-up?
+
+%ENDTWISTY%

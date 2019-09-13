@@ -10,6 +10,7 @@ if __name__ == "__main__":
     parser.add_argument('--ex3',help='ex3 filename')
     parser.add_argument('--ex4',help='ex4 filename')
     parser.add_argument('--ex5',help='ex5 filename')
+    parser.add_argument('--ex6',help='ex6 filename')
     args = parser.parse_args()
 
     with open(args.ex1) as f:
@@ -28,6 +29,12 @@ if __name__ == "__main__":
             ex5 = f.read()
     else:
         ex5 = ""
+
+    if args.ex6:
+        with open(args.ex6) as f:
+            ex6 = f.read()
+    else:
+        ex6 = ""
 
 
     body_txt="""
