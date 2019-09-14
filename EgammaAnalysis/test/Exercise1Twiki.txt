@@ -10,19 +10,41 @@
 The goal of this exercise is to gain some basic familarity with accessing E/gamma objects in the CMSSW framework. We will mix python and c++ techiques, python in general is faster and easier to investigate things while c++ can be faster and more robust. 
 In general the two approaches share many common elements and leasons learnt in one can carry other to the other
 
+---++ Environment Setup
+
+First we need to setup a CMSSW environment. In your working area
+
+<verbatim>
+cmsrel CMSSW_10_2_10
+cd CMSSW_10_2_10/src/
+cmsenv
+git cms-init
+#generic e/gamma requirents for updating the miniAOD
+git cms-merge-topic cms-egamma:EgammaPostRecoTools
+git cms-merge-topic cms-egamma:PhotonIDValueMapSpeedup1029
+git cms-merge-topic cms-egamma:slava77-btvDictFix_10210
+git cms-addpkg EgammaAnalysis/ElectronTools
+rm EgammaAnalysis/ElectronTools/data -rf
+git clone https://github.com/cms-data/EgammaAnalysis-ElectronTools.git EgammaAnalysis/ElectronTools/data
+#now we add in our POS tools
+git clone git@github.com:cms-egamma/EgCMSPOS2019.git
+scram b -j 8
+</verbatim>
+
+
 ---++ Basic Familarisation of E/gamma Objects (miniAOD)
 
 We will use miniAOD first as its the most common POG dataformat while having nice embedded information for analysis. First start a python interactive environment. 
 
 <verbatim>
-python -i EgCMSPOS2019/EgammaAnalysis/test/exercise1a.py <file.root>
+python -i EgCMSPOS2019/EgammaAnalysis/test/exercise1a.py /eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root
 </verbatim>
 
 Now we can interactively investigate electron and photon objects. First we need a "handle" to access the electron and photon collections. The electron and photon handles have already been created in the code, all we have to do is set them to point to the correct location. As a side note, a handle is just a term for class which allows us to retreive the product data and effectively acts like a c++ pointer (and is one under the hood..).
 
 First we need to load the event we wish investigate. 
 <verbatim>
-events.to(0) #the event we wish to go to, in this case it could be other events too
+events.to(0) #the entry in the file of the event we wish to go to
 </verbatim>
 
 Now we get set the handles to the electron/photon collections
@@ -69,25 +91,24 @@ ele.userInt("")
 
 Note at any time if you want to see what userdata is stored in the electron/photon, pass an empty string to userFloat, userInt, electronID/photonID functions. An exception will occur and it'll show you which ones are active. Note: dont do this in c++! or in an event loop, this is just for interactively investigating things in python. 
 
-task 1: play around the code and access a few id variables. 
+*exercise 1.1*: play around the code and access a few id variables. 
 
 ---++ Plotting Variables
 
 Interactively looking at individual electrons is find to get a feeling but its not very useful for analysis. So lets make some histograms! We have now added an event loop to our example python script and some histograms to plot.
 
 <verbatim>
-python -i EgCMSPOS2019/EgammaAnalysis/test/exercise1b.py <file.root>
+python -i EgCMSPOS2019/EgammaAnalysis/test/exercise1b.py /eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root
 </verbatim>
 
-task 1:
+*exercise 1.2*:
 plot the sigmaIEtaIEta histogram
 
-task 2:
+*exercise 1.3*:
 add a histogram of hadem
 
-task 3:
-apply require the objects entering the histogram to pass the medium ID
-
+*exercise 1.4*:
+require the objects entering the histograms to pass the medium ID. Compare the histograms to the orginal inclusive histograms, what do you notice?
 
 ---++ Updating User Information
 
@@ -101,31 +122,58 @@ We will now show both approaches. They both have their advantages and disadvanta
 
 
 ---+++ Generating Updated MiniAOD
-<to be filled>
+
+E/gamma maintains a set of recipes and tools to do this. The full, up-to-date instructions can be found at [[https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPostRecoRecipes][EgammaPostRecoRecipes]]. They are breifly summarised below:
+
+The tool to update e/gamma objects is "EgammaPostRecoTools" and consists of adding three lines to your CMSSW config. 
+
+<verbatim>
+from RecoEgamma.EgammaTools.EgammaPostRecoTools import setupEgammaPostRecoSeq
+setupEgammaPostRecoSeq(process,era='2018-Prompt')  
+#a sequence egammaPostRecoSeq has now been created and should be added to your path, eg process.p=cms.Path(process.egammaPostRecoSeq)
+</verbatim>
+
+So lets make some new miniAOD with all the latest and greatest IDs and scale factors! There is an example script in EgammaPostRecoTools which does this for us [[https://github.com/cms-egamma/cmssw/blob/EgammaPostRecoTools/RecoEgamma/EgammaTools/test/runEgammaPostRecoTools.py][RecoEgamma/EgammaTools/test/runEgammaPostRecoTools.py]]. It simply does the above three lines as well as setting up the input and output modules standard to any CMSSW job. Lets run it
+
+<verbatim>
+cmsRun RecoEgamma/EgammaTools/test/runEgammaPostRecoTools.py inputFiles=/eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root outputFile=dyToEE_newMiniAOD.root maxEvents=1000 era=2018-prompt
+</verbatim>
+
+We have now produced a new miniAOD file with updated electrons and photons. 
+
+Lets look at the content of the file
+<verbatim>
+edmDumpEventContent dyToEE_newMiniAOD.root
+</verbatim>
+
+Compare this to the original miniAOD file and you will see we have two new collections called slimmedElectrons and slimmedPhotons but now with the process EGAMMA not PAT. This means when you access slimmedElectrons/slimmedPhotons without specifying a process, it picks up the most recent one , in this case our new EGAMMA one. 
+
+So if we go back exercise 1.1 using this new file, we'll now be able to access different user content without changing our script. For example we have now have access to the scales & smearings and photon V2 IDs. 
+
+You can see the user content embbed in an electron / photon via the script:
+[[https://github.com/cms-egamma/cmssw/blob/EgammaPostRecoTools/RecoEgamma/EgammaTools/test/printEgammaUserData.py][RecoEgamma/EgammaTools/test/printEgammaUserData.py]]
+
+Try it and compare the content for the orginal file and our new file:
+<verbatim>
+cmsRun RecoEgamma/EgammaTools/test/printEgammaUserData.py /eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root
+cmsRun RecoEgamma/EgammaTools/test/printEgammaUserData.py dyToEE_newMiniAOD.root
+</verbatim>
+
 
 ---+++ Ntuplising inside full CMSSW framework
 
-We will use the ggAnalysis code to do Option 2 for us and produce ntuples from the objects we have been using. 
+We will use the ggAnalysis code to do Option 2 for us and produce ntuples from the objects we have been using. This will be signficantly faster as we dont need to write the new collection to disk. Note this is maintained by cmkuo at [[https://github.com/cmkuo/ggAnalysis.git][this location] but we will use a forked version to add additional info needed for these tutorials
 
+In our $CMSSW_BASE/src directory
 <verbatim>
-cmsrel CMSSW_10_2_10
-cd CMSSW_10_2_10/src/
-cmsenv
-git cms-init
-git cms-merge-topic cms-egamma:EgammaPostRecoTools
-git cms-merge-topic cms-egamma:PhotonIDValueMapSpeedup1029
-git cms-merge-topic cms-egamma:slava77-btvDictFix_10210
-git cms-addpkg EgammaAnalysis/ElectronTools
-rm EgammaAnalysis/ElectronTools/data -rf
-git clone https://github.com/cms-data/EgammaAnalysis-ElectronTools.git EgammaAnalysis/ElectronTools/data
-scram b -j 8
+cd $CMSSW_BASE/src/
 git cms-merge-topic cms-met:METFixEE2017_949_v2_backport_to_102X
 git clone https://github.com/cmkuo/HiggsAnalysis.git
-git clone -b 102X https://github.com/cmkuo/ggAnalysis.git
+git clone -b 102X-egpos2019 https://github.com/cms-egamma/ggAnalysis.git #fork of https://github.com/cmkuo/ggAnalysis.git
 scram b -j 8
 </verbatim>
 
-Check what the ntuplizer is doing for electrons in ggAnalysis/ggNtuplizer/plugins/ggNtuplizer_electrons.cc and for photons in ggAnalysis/ggNtuplizer/plugins/ggNtuplizer_photons.cc. Look at the following snippet from ggNtuplizer_electrons.cc,
+Check what the ntuplizer is doing for electrons in [[https://github.com/cms-egamma/ggAnalysis/blob/102X-egpos2019/ggNtuplizer/plugins/ggNtuplizer_electrons.cc][ggAnalysis/ggNtuplizer/plugins/ggNtuplizer_electrons.cc]] and for photons in [[https://github.com/cms-egamma/ggAnalysis/blob/102X-egpos2019/ggNtuplizer/plugins/ggNtuplizer_photons.cc][ggAnalysis/ggNtuplizer/plugins/ggNtuplizer_photons.cc]]. Look at the following snippet from ggNtuplizer_electrons.cc,
 
 <img alt="eleCode.png" height="547" src="%ATTACHURL%/eleCode.png" title="eleCode.png" width="938" />
 
@@ -140,7 +188,7 @@ All this is completely analogous to we were doing in our interactive python sess
 
 <!--For acceptance or efficiency studies it is better to use the electron supercluster eta, while for momentum estimation for electrons one needs to use the electron eta directly, coming from the track (they are different since supercluster eta is a geometric quantity related to position of the cluster, while electron eta depends on the track direction and is also more precise).-->
 
-Now run the ntuplizer on a root file from the 2018A rereco dataset /EGamma/Run2018A-22Jun2018-v1/MINIAOD .
+Now run the ntuplizer on a root file from the 2018D rereco dataset /EGamma/Run2018D-PromptReco-v2/MINIAOD.
 
 <verbatim>
 cd $CMSSW_BASE/src/ggAnalysis/ggNtuplizer/test
@@ -148,7 +196,7 @@ cd $CMSSW_BASE/src/ggAnalysis/ggNtuplizer/test
 
 Now open run_data2018_102X.py, and put one root file as input, for example this one:
 
-[[https://cmsweb.cern.ch/das/request?input=file%3D%2Fstore%2Fdata%2FRun2018A%2FEGamma%2FMINIAOD%2F22Jun2018-v1%2F00000%2F0E5ECE48-EC78-E811-9B87-FA163EBA050E.root&instance=prod/global][/store/data/Run2018A/EGamma/MINIAOD/22Jun2018-v1/00000/0E5ECE48-EC78-E811-9B87-FA163EBA050E.root]]
+[[https://cmsweb.cern.ch/das/request?view=list&limit=50&instance=prod%2Fglobal&input=file%3D%2Fstore%2Fdata%2FRun2018D%2FEGamma%2FMINIAOD%2FPromptReco-v2%2F000%2F322%2F252%2F00000%2FCEA0CEC1-E9B3-E811-921F-FA163E9182E7.root][/store/data/Run2018D/EGamma/MINIAOD/PromptReco-v2/000/322/252/00000/CEA0CEC1-E9B3-E811-921F-FA163E9182E7.root]] which we have copied to  /eos/cms/store/group/phys_egamma/CMSPOS2019/EGamma_Run2018D_MINIAOD_322252_CEA0CEC1-E9B3-E811-921F-FA163E9182E7.root for your convenience. 
 
 Now invoke the proxy
 
@@ -179,6 +227,8 @@ Now run on simulated sample, which is enriched in real electron. This dataset is
 Take one root file from this dataset, for example this one:
 
 [[https://cmsweb.cern.ch/das/request?input=file%3D%2Fstore%2Fmc%2FRunIIAutumn18MiniAOD%2FDYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8%2FMINIAODSIM%2F102X_upgrade2018_realistic_v15-v1%2F00000%2FF1B849B9-9B5D-1041-B5CD-73DB6C24072A.root&instance=prod/global][/store/mc/RunIIAutumn18MiniAOD/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/102X_upgrade2018_realistic_v15-v1/00000/F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root]]
+
+We have put this at /eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root for your convenience (yes you guessed it, it was the file we used earlier)
 
 Put this root file in run_mc2018_102X.py, and run it .
 
