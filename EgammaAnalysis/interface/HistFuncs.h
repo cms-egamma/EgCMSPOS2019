@@ -4,6 +4,8 @@
 #include "TH1.h"
 #include "TTree.h"
 #include "TChain.h"
+#include "TCanvas.h"
+#include "TROOT.h"
 
 #include <vector>
 #include <string>
@@ -32,9 +34,26 @@ public:
 
   static TChain* makeChain(const std::string& chainName,std::string filelist,int nrJobs=1,int jobNr=1,int verbose=2);
   static TChain* makeChain(const std::string& chainName,std::vector<std::string> filelist,int nrJobs=1,int jobNr=1,int verbose=2);
-
+  static void print(const std::string& fileName,const std::string& canvasName);
+  template<typename T,typename Container=TCanvas>
+  static std::vector<T*> getFromCanvas(Container* c1,const std::string& className,int verbose=0);
 };
 
+template<typename T,typename Container>
+std::vector<T*> HistFuncs::getFromCanvas(Container* c1,const std::string& className,int verbose)
+{
+  std::vector<T*> result;
+  TIter next(c1->GetListOfPrimitives());
+  while (TObject* tObj=next()) {
+    if(verbose>0) std::cout <<tObj->ClassName()<<std::endl;
+    if(tObj->ClassName()==className){
+      T* obj  = static_cast<T*>(tObj);
+      result.push_back(obj);
+    }
+  }
+  if(verbose>0) std::cout <<"nr objs "<<result.size()<<std::endl;
+  return result;
+}
 
 #endif
 

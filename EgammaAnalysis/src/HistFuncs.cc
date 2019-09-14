@@ -178,3 +178,17 @@ TChain* HistFuncs::makeChain(const std::string& chainName,std::vector<std::strin
   }
   return chain;
 }
+
+void HistFuncs::print(const std::string& fileName,const std::string& canvasName)
+{
+  TCanvas* canvas = static_cast<TCanvas*>(gROOT->FindObject(canvasName.c_str()));
+  
+  std::string outputName(fileName);
+  
+  std::string outputNameC = outputName + ".C";
+  std::string outputNamePdf = outputName + ".pdf";
+  std::string outputNamePng = outputName + ".png";
+  canvas->Print(outputNamePdf.c_str());
+  canvas->Print(outputNamePng.c_str());
+  canvas->Print(outputNameC.c_str());
+}
