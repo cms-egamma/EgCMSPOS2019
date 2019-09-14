@@ -18,7 +18,7 @@ An electrons energy is measured by the calorimeter while its momentum is measure
 Like always, we will focus on the electrons as given they have a track they are the more interesting of the two oobjects.  
 
 ---++ ECAL Energy Measurement
-As we discussed, individual energy deposits in the calorimeter are summed into clusters of hits (PFClusters) and then those clusters are clustered into SuperClusters to represent the initial electron before undergoing showering. Lets look into some energy measurements
+As we discussed previously, individual energy deposits in the calorimeter are summed into clusters of hits (PFClusters) and then those clusters are clustered into SuperClusters to represent the initial electron before undergoing showering. Lets look into some energy measurements
 
 First we will investigate the energy of the resolution of just summing directly the ECAL energy deposits (rec-hits). We will do this first for the seed cluster and the supercluster and compare them to the true energy of the electron (which we know as this is Monte Carlo simulation).
 
@@ -83,6 +83,13 @@ This energy is what is stored as the electrons energy and is accessed by
 eleEn_              .push_back(iEle->energy());
 </verbatim>
 It is also equivalent to "p4().E()"
+
+<br />%ICON{led-green}% Question: now plot the full ECAL-Trk combined energy and the ECAL only energy. Compare in the ranges of 10 <genPt<15 GeV and 30<genPt<50 as before. Which is better for which energy range?
+
+---++ Residual Energy corrections
+
+In a perfect world, the ECAL-Track energy would be all we need. However we live in an imperfect world where the 
+
 
 Energy correction flow of e/gamma objects is the following:
 
