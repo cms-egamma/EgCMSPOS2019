@@ -13,9 +13,9 @@ def make_leaf_names(names,type_):
     try:
         ret_val = '{}/{}'.format(names[0],type_)
         try: 
-            return (ret_val+":"+':'.join(names[1:])).replace('-','_')
+            return (ret_val+":"+':'.join(names[1:])).replace('-','_').replace('.','_')
         except KeyError:
-            return ret_val.replace('-','_')
+            return ret_val.replace('-','_').replace('.','_')
     except KeyError:
         return ''
      
@@ -26,7 +26,7 @@ class EleTreeData:
 
     def _init_tree(self,ele):
         self.evt_data_names = ['runnr','lumisec','eventnr']
-        self.ele_data_names = ['et','eta','phi','energy']
+        self.ele_data_names = ['et','eta','phi','energy','sigmaIetaIeta','r9','hcalOverEcal','hcalOverEcalBc','full5x5_sigmaIetaIeta','full5x5_r9','dr03TkSumPt','dr03EcalRecHitSumEt','dr03HcalTowerSumEt','pfIsolationVariables.sumChargedHadronPt']
         self.ele_userfloat_names = [name for name in ele.userFloatNames()]
         self.ele_userint_names = [name for name in ele.userIntNames()]
         self.ele_id_names = [x.first for x in ele.electronIDs()]
@@ -52,7 +52,12 @@ class EleTreeData:
         self.evt_data[2] = event.eventAuxiliary().event()
 
         for indx,name in enumerate(self.ele_data_names):
-            self.ele_data[indx] = getattr(ele,name)()
+            if name.find(".")==-1:
+                self.ele_data[indx] = getattr(ele,name)()
+            else:
+                #this is the case for electron and photon structs ele.struct().member
+                names = name.split(".")
+                self.ele_data[indx] = getattr(getattr(ele,names[0])(),names[1])
         for indx,name in enumerate(self.ele_userfloat_names):
             self.ele_userfloat[indx] = ele.userFloat(name)
         for indx,name in enumerate(self.ele_userint_names):
