@@ -149,7 +149,7 @@ We have now produced a new miniAOD file with updated electrons and photons.
 
 Lets look at the content of the file
 <verbatim>
-edmDumpEventContent dyToEE_newMiniAOD.root
+edmDumpEventContent dyToEE_newMiniAOD_numEvent1000_EDM.root
 </verbatim>
 
 Compare this to the original miniAOD file and you will see we have two new collections called slimmedElectrons and slimmedPhotons but now with the process EGAMMA not PAT. This means when you access slimmedElectrons/slimmedPhotons without specifying a process, it picks up the most recent one , in this case our new EGAMMA one. 
@@ -161,8 +161,8 @@ You can see the user content embbed in an electron / photon via the script:
 
 Try it and compare the content for the orginal file and our new file:
 <verbatim>
-cmsRun RecoEgamma/EgammaTools/test/printEgammaUserData.py /eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root
-cmsRun RecoEgamma/EgammaTools/test/printEgammaUserData.py dyToEE_newMiniAOD.root
+python RecoEgamma/EgammaTools/test/printEgammaUserData.py /eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root
+python RecoEgamma/EgammaTools/test/printEgammaUserData.py dyToEE_newMiniAOD_numEvent1000_EDM.root
 </verbatim>
 
 
