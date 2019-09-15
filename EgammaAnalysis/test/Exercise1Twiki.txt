@@ -15,6 +15,8 @@ In general the two approaches share many common elements and leasons learnt in o
 First we need to setup a CMSSW environment. In your working area
 
 <verbatim>
+ssh -XY your_username@lxplus6.cern.ch
+
 cmsrel CMSSW_10_2_10
 cd CMSSW_10_2_10/src/
 cmsenv
@@ -50,7 +52,7 @@ events.to(0) #the entry in the file of the event we wish to go to
 Now we get set the handles to the electron/photon collections
 <verbatim>
 events.getByLabel(ele_label,eles_handle)
-events.getByLabel(phos_label,phos_handle)
+events.getByLabel(pho_label,phos_handle)
 </verbatim>
 
 Now to access the correct collections themselves
@@ -107,6 +109,10 @@ plot the sigmaIEtaIEta histogram
 *exercise 1.3*:
 add a histogram of hadem
 
+[You can browse the following codes to know how to access hadem (H/E): 
+https://github.com/cms-sw/cmssw/blob/master/DataFormats/EgammaCandidates/interface/GsfElectron.h, 
+https://github.com/cms-sw/cmssw/blob/master/DataFormats/EgammaCandidates/interface/Photon.h]
+
 *exercise 1.4*:
 require the objects entering the histograms to pass the medium ID. Compare the histograms to the orginal inclusive histograms, what do you notice?
 
@@ -136,7 +142,7 @@ setupEgammaPostRecoSeq(process,era='2018-Prompt')
 So lets make some new miniAOD with all the latest and greatest IDs and scale factors! There is an example script in EgammaPostRecoTools which does this for us [[https://github.com/cms-egamma/cmssw/blob/EgammaPostRecoTools/RecoEgamma/EgammaTools/test/runEgammaPostRecoTools.py][RecoEgamma/EgammaTools/test/runEgammaPostRecoTools.py]]. It simply does the above three lines as well as setting up the input and output modules standard to any CMSSW job. Lets run it
 
 <verbatim>
-cmsRun RecoEgamma/EgammaTools/test/runEgammaPostRecoTools.py inputFiles=/eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root outputFile=dyToEE_newMiniAOD.root maxEvents=1000 era=2018-prompt
+cmsRun RecoEgamma/EgammaTools/test/runEgammaPostRecoTools.py inputFiles=file:/eos/cms/store/group/phys_egamma/CMSPOS2019/DYToEE_M-50_NNPDF31_TuneCP5_13TeV-powheg-pythia8__RunIIAutumn18MiniAOD__102X_upgrade2018_realistic_v15-v1__MINIAODSIM__F1B849B9-9B5D-1041-B5CD-73DB6C24072A.root outputFile=dyToEE_newMiniAOD.root maxEvents=1000 era=2018-Prompt
 </verbatim>
 
 We have now produced a new miniAOD file with updated electrons and photons. 
