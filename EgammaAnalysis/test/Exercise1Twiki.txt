@@ -12,11 +12,15 @@ In general the two approaches share many common elements and leasons learnt in o
 
 ---++ Environment Setup
 
-First we need to setup a CMSSW environment. In your working area
+Login to lxplus slc6 machine
 
 <verbatim>
 ssh -XY your_username@lxplus6.cern.ch
+</verbatim>
 
+First we need to setup a CMSSW environment. In your working area
+
+<verbatim>
 cmsrel CMSSW_10_2_10
 cd CMSSW_10_2_10/src/
 cmsenv
