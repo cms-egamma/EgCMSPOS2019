@@ -25,7 +25,7 @@ Cuts are applied on different shower shape and isolation variables to identify a
 <img alt="ElectronID_94Xv2.png" height="466" src="%ATTACHURL%/ElectronID_94Xv2.png" title="ElectronID_94Xv2.png" width="1006" />
 
 ---+++ ID variable investigations
-Lets look at these variables and plot them. We will do it for real electrons and jets reconstructed as electrons (commonly refered to as fakes as the jet fakes the signature of an electron). The key variables to investigate are below:
+Lets look at these variables and plot them. We will do it for real electrons and jets reconstructed as electrons (commonly refered to as fakes as the jet fakes the signature of an electron). The key variables to investigate ar e below:
 
 | *variable*  |  *CMSSW method*  |  *ntuple name*  |  *suggested range barrel*  |  *suggested range endcap*  |
 | full5x5_sigmaIetaIeta  |  full5x5_sigmaIetaIeta()  |  eleSigmaIEtaIEtaFull5x5  |  0.0 to 0.02  |  0.0 to 0.05  |
@@ -37,11 +37,11 @@ Lets look at these variables and plot them. We will do it for real electrons and
 | photon isolation   |  pfIsolationVariables().sumPhotonHadronPt  |  elePFPhoIso  |  0 to 20  |  0 to 20  |
 | E/p_in   |  eSuperClusterOverP()  |  eleEoverP  |  0 to 5  |  0 to 5  |
 | expected missing inner hits   |   gsfTrack()->hitPattern()<br>.numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS)  |  eleMissHits  |  0  to 5  |  0 to 5  |
-| MVA-Iso*  |  userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values")  |  -1 to 1  |  -1 to  1  |
+| MVA-Iso*  |  userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values")  |  eleIDMVAIso |  -1 to 1  |  -1 to  1  |
 *okay this isnt a "cut based ID variable" but its interesting to compare it for signal and background. More on this later...
 
 
-To make life easier, a set of utility functions in the package [[https://github.com/cms-egamma/EgCMSPOS2019/blob/master/EgammaAnalysis/interface/HistFuncs.h][HistFuncs]] are provided. These functions automatise the tedious parrts of comparing histograms. Of interest here is [[https://github.com/cms-egamma/EgCMSPOS2019/blob/master/EgammaAnalysis/interface/HistFuncs.h#L25][compSigBkg]] which compares signal and background for a given variable. We will select signal events by requiring electrons to be matched to a gen electron with pt>10 not from a tau decay. We will select background events by requiring that the electorn is not matched to a gen electron. In both cases we will use the same DYToJets MC sample. We have already produced the ntuples for you to save time. We will require that the electron is in the "good" region of the detector which is |eta|<1.4448 || 1.566<|eta|<2.5. We have saved a variable "eleRegion" which is equal to 0 if in the barrel region and 1 if in the endcap region. Finally to make it a fair comparison, we will do it for >30 GeV electrons. 
+To make life easier, a set of utility functions in the package [[https://github.com/cms-egamma/EgCMSPOS2019/blob/master/EgammaAnalysis/interface/HistFuncs.h][HistFuncs]] are provided. These functions automatise the tedious parrts of comparing histograms. Of interest here is [[https://github.com/cms-egamma/EgCMSPOS2019/blob/master/EgammaAnalysis/interface/HistFuncs.h#L25][compSigBkg]] which compares signal and background for a given variable. We will select signal events by requiring electrons to be matched to a gen electron with pt>10 not from a tau decay. We will select background events by requiring that the electron is not matched to a gen electron. In both cases we will use the same DYToJets MC sample. We have already produced the ntuples for you to save time. We will require that the electron is in the "good" region of the detector which is |eta|<1.4448 || 1.566<|eta|<2.5. We have saved a variable "eleRegion" which is equal to 0 if in the barrel region and 1 if in the endcap region. Finally to make it a fair comparison, we will do it for >30 GeV electrons. 
 
 Here is an example for sigmaIEtaIEta
 
@@ -60,6 +60,41 @@ which will print fileName+".png" and fileName+".C". It is well worth always prin
 
 
 *Exercise 2.1*: plot each variable for the barrel and endcap seperately. Can you explain why they look the shape they do for signal and for background?
+
+---+++ Detail ID shower shape discussion
+
+Now we've had a look and got a feel of the various ID variables, lets really focus in on sigmaIEtaIEta full5x5 and really get to grips with sigmaIEtaIEta and what full 5x5 means. First what is sigmaIEtaIEta, its simply the RMS of the showerspread in eta in units of crystals scaled to the average crystal eta width of 0.01745 and 0.0447 of the barrel and endcap. This obfuscates a key feature of sigmaIEta so lets plot raw sigmaIEtaIEtaFull5x5 /  0.0174 (or 0.0447 for endcap).
+<verbatim>
+histEB = HistFuncs::makeHist(dyTree2018,100,0,1,"eleSigmaIEtaIEtaFull5x5/0.0174","elePt>30 && eleRegion==0 && eleGenPt>10 && eleGenFromTau==0");
+histEE = HistFuncs::makeHist(dyTree2018,100,0,1,"eleSigmaIEtaIEtaFull5x5/0.0447","elePt>30 && eleRegion==1 && eleGenPt>10 && eleGenFromTau==0");
+histEB->Draw()
+histEE->SetLineColor(2)
+histEE->Draw("SAME")
+</verbatim>
+What do you see when plotting the raw sigmaIEtaIEtaFull5x5?
+
+
+ As we know, PF clustering assigns fractions of a rec-hits energy to nearby clusters under the hypothesis that each local maxima is a single particle. sigmaIEtaIEta is calculated using these fractions. sigmaIEtaiEtaFull5x5 is calculated using the full energy of all the rec-hits in the 5x5, ignoring fractions and those hits not included in a cluster. 
+
+Lets compare sigmaIEtaIEta and sigmaIEtaIEtaFull5x5. For signal:
+
+<verbatim>
+hist = HistFuncs::compVars(dyTree2018,100,0,0.02,{"eleSigmaIEtaIEtaFull5x5","eleSigmaIEtaIEta"},"elePt>30 && eleRegion==0 && eleGenPt>10 && eleGenFromTau==0")
+</verbatim>
+
+and for background
+<verbatim>
+hist = HistFuncs::compVars(dyTree2018,100,0,0.02,{"eleSigmaIEtaIEtaFull5x5","eleSigmaIEtaIEta"},"elePt>30 && eleRegion==0 && eleGenPt<=0 && eleGenFromTau==0")
+</verbatim>
+
+There is now noticably more background passing sigmaIEtaIEta<0.011 but not much more signal passing. This is because this variable is actively trying to determine if the cluster is a single particle (signal) or two very close by particles (background). By using the fractions, we discard energy contributions from other nearby particles as found by the PF clustering worsenting the variable! Thus in all cases in CMS (with a few minor exceptions) we use the full 5x5 showershapes. 
+
+
+Finally we use sigmaIEtaIEta but not sigmaIPhiIPhi. You can plot that to see why :)
+
+<verbatim>
+hist = HistFuncs::compSigBkg(dyTree2018,dyTree2018,100,0,0.03,"eleSigmaIPhiIPhiFull5x5","elePt>30 && eleRegion==0","eleGenPt>10 && eleGenFromTau==0","eleGenPt<=0",true)
+</verbatim>
 
 
 ---+++ Applying the selection
@@ -140,14 +175,14 @@ Notice how the eleSigmaIEtaIEtaFull5x5 distribution is truncated at the cut valu
 Lets make a new cut-based electron ID. From $CMSSW_BASE/src/, do
 
 <verbatim>
-git cms-addpkg RecoEgamma /ElectronIdentification
+git cms-addpkg RecoEgamma/ElectronIdentification
 </verbatim>
 
 Cuts are defined in /RecoEgamma/ElectronIdentification/python/Identification/. Go to this directory and open cutBasedElectronID_Fall17_94X_V2_cff.py.  Here you can see the defination of the ID and can see the values of the cuts, for example whar tight ID in endcap, what is the missingHitsCut for the tight ID in the endcap. 
 
 Let's assume we want to design a new WP of ID where missingHitsCut is 0, and let's say we want to call it SuperTight ID.
 
-Make necessary changes in RecoEgamma /ElectronIdentification/python/Identification/cutBasedElectronID_Fall17_94X_V2_cff.py
+Make necessary changes in RecoEgamma/ElectronIdentification/python/Identification/cutBasedElectronID_Fall17_94X_V2_cff.py
 
 Just copy and paste the whole block for tight ID, including idName, WP_Tight_EB, WP_Tight_EE, then change tight to supertight where ever necessary, and put missingHitsCut=0 for both barrel and endcap.
 
@@ -185,17 +220,20 @@ EventTree ->Draw("elePt","eleIDbit[]>>5&1","sames") //super tight in blue
 
 ---+++ MC measured Efficiencies and Backgrounds 
 
-It is very important to see how ID variables behave vs et/eta/pu when setting cuts. A key way to do this is to look at efficiencies usiing Monte Carlo. Lets investigate the variables, setting cuts on Et. An example for H/E:
+It is very important to see how ID variables behave vs et/eta/pu when setting cuts. A key way to do this is to look at efficiencies usiing Monte Carlo. Note we prefer to plot vs genPt and supercluster eta when plotting vs et and eta. The gen Pt reason is bin migration. If a 45 GeV electron badly reconstructed and has a reco pt of 35 GeV it will most likely fail the ID. In a Z sample like ours, there are many more 45 GeV electrons than 35 GeV electrons. Therefore when using reco pt, it looks like we're inefficient for 35 GeV when we're really not. Hence we use gen pt to be unbiased w.r.t these effect. Supercluser eta is more straightforward, supercluster eta is w.r.t to 0,0,0 which means a cluster with eta of 1.2 is always in the same place in the detector. Electron eta is w.r.t to the vertex it comes from therefore the same value of electron eta can mean a range of calorimeter eta, thus smearing out any detector effects. 
+
+Now lets plot some efficiencies. An example for H/E:
 
 <verbatim>
 root EgammaAnalysis/test/rootSetup.C
-dyTree2018 = HistFuncs::makeChain("ggNtuplizer/EventTree","/pnfs/pp.rl.ac.uk/data/cms/store/user/sharper/10210/GGNtupV2/MINIAODSIM/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/102X_upgrade2018_realistic_v15-v1_MINIAODSIM_GGNtupV2/190915_203701/0000/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_ntuples_102X_upgrade2018_realistic_v15-v1_GGNtupV2_*.root",10);
+dyTree2018 = HistFuncs::makeChain("ggNtuplizer/EventTree","/eos/cms/store/group/phys_egamma/CMSPOS2019/ntuples/GGNtupV2/MINIAODSIM/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/102X_upgrade2018_realistic_v15-v1_MINIAODSIM_GGNtupV2/190915_203701/0000/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_ntuples_102X_upgrade2018_realistic_v15-v1_GGNtupV2_*.root",10); //the 10 is to use 1/10th of the stats for time reasons, change to 1 to get them all
 histRel = HistFuncs::makeEffHist(dyTree2018,100,20,60,"eleGenPt","elePt>20 && eleRegion==0 && eleGenPt>10 && eleGenFromTau==0","eleHoverE<0.05") 
 histAbs = HistFuncs::makeEffHist(dyTree2018,100,20,60,"eleGenPt","elePt>20 && eleRegion==0 && eleGenPt>10 && eleGenFromTau==0","eleHoverE*eleEcalEn<4") 
 histRel->SetLineColor(2);
 histRel->Draw();
 histAbs->Draw("SAME");
 </verbatim>
+
 
 <br />%ICON{led-green}% Question: What do you notice? Can you do look at other ID variables an put cuts on them?
 
