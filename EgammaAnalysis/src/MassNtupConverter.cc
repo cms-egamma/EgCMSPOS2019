@@ -27,7 +27,7 @@ struct EleVecBranches {
   std::vector<std::vector<UShort_t>* >dataUShort;
   std::vector<std::vector<ULong64_t>* >dataULong;
   std::vector<std::vector<std::vector<int>>*> dataVecInt;
-  std::vector<std::vector<std::vector<int>>*> dataVecFloat;
+  std::vector<std::vector<std::vector<float>>*> dataVecFloat;
   std::vector<std::pair<std::string,DataType> > names;
   std::vector<int> nrBranchesByType;
   //oh screw it, lets brute force it
@@ -61,7 +61,7 @@ struct EleVecBranches {
 
 void EleVecBranches::init(TTree* tree)
 {
-  tree->GetEntry(0);
+
   for(int branchNr=0;branchNr<tree->GetListOfBranches()->GetEntries();branchNr++){
     std::string name = (*tree->GetListOfBranches())[branchNr]->GetName();
     if(name.find("ele")==0 && name.find("eleGSF")!=0){
@@ -80,14 +80,22 @@ void EleVecBranches::init(TTree* tree)
   dataVecInt.resize(nrBranchesByType[static_cast<int>(DataType::kVecInt)],nullptr);
   dataVecFloat.resize(nrBranchesByType[static_cast<int>(DataType::kVecFloat)],nullptr);
 
+  for(auto& entry: dataFloat) entry=new std::vector<float>();
+  for(auto& entry: dataInt) entry=new std::vector<int>();
+  for(auto& entry: dataUShort) entry=new std::vector<UShort_t>();
+  for(auto& entry: dataULong) entry=new std::vector<ULong64_t>();
+  for(auto& entry: dataVecInt) entry=new std::vector<std::vector<int> >();
+  for(auto& entry: dataVecFloat) entry=new std::vector<std::vector<float> >();
+  
+  
+
   std::vector<int> counts(static_cast<int>(DataType::kVecFloat)+1,0);  
   for(auto& name : names){
-    TBranch* branch = tree->GetBranch(name.first.c_str());
     DataType dataType = name.second;
-    auto setAddress = [&counts,branch](auto& data,auto& nameMap,DataType& dataType){
-      std::cout <<"setting address  "<<branch->GetName()<<" count "<<counts[static_cast<int>(dataType)]<<" data tpye "<<static_cast<int>(dataType)<<std::endl;
-      branch->SetAddress(&data[counts[static_cast<int>(dataType)]]);
-      nameMap[branch->GetName()]=counts[static_cast<int>(dataType)];
+    auto setAddress = [&counts,&name,tree](auto& data,auto& nameMap,DataType& dataType){
+      std::cout <<"setting address  "<<name.first<<" count "<<counts[static_cast<int>(dataType)]<<" data tpye "<<static_cast<int>(dataType)<<std::endl;
+      tree->SetBranchAddress(name.first.c_str(),&data[counts[static_cast<int>(dataType)]]);
+      nameMap[name.first]=counts[static_cast<int>(dataType)];
       counts[static_cast<int>(dataType)]++;
     };
     
@@ -109,7 +117,7 @@ struct EleBranches {
   std::vector<UShort_t> dataUShort;
   std::vector<ULong64_t> dataULong;
   std::vector<std::vector<int>> dataVecInt;
-  std::vector<std::vector<int>> dataVecFloat;
+  std::vector<std::vector<float>> dataVecFloat;
   size_t ptIndex,etaIndex,phiIndex;
 
   void init(const EleVecBranches& inTreeBranchData,TTree *tree,int index); 
@@ -206,6 +214,7 @@ void ConvertToMassNtup::convert(TTree* inTree,const std::string& outputFilename)
   ele1.init(inBranches,outTree,0);
   ele2.init(inBranches,outTree,1);
   std::cout <<"inited "<<std::endl;
+  
   for(int entryNr=0;entryNr<nrEntries;entryNr++){
     inTree->GetEntry(entryNr);
     if(entryNr%10000==0) std::cout <<"entryNr "<<entryNr<<" nr Entries "<<nrEntries<<std::endl;
@@ -225,7 +234,6 @@ void ConvertToMassNtup::convert(TTree* inTree,const std::string& outputFilename)
 
     }
   }
-  outTree->Write();
   outFile->Write();
   outFile->Close();
  
