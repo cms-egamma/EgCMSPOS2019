@@ -1,14 +1,14 @@
 %TWISTY{
   mode="div"
-  showlink="Show Exercise 3: Understanding Electron/Photon Energy Measurements"
-  hidelink="Hide Exercise 3: Understanding Electron/Photon Energy Measurements"
+  showlink="Show Exercise 3: Electron/Photon Energy Measurements"
+  hidelink="Hide Exercise 3: Electron/Photon Energy Measurements"
   showimgleft="%ICONURLPATH{toggleopen-small}%"
   hideimgleft="%ICONURLPATH{toggleclose-small}%"
 }%
 
 
 
----+ Exercise 3: Understanding Electron/Photon Energy Measurements
+---+ Exercise 3: Electron/Photon Energy Measurements
 
 This exercise will teach you about e/gamma energies estimates in CMS.
 
@@ -88,147 +88,23 @@ It is also equivalent to "p4().E()"
 
 ---++ Residual Energy corrections
 
-In a perfect world, the ECAL-Track energy would be all we need. However we live in an imperfect world where the 
+If we only used Monte Carlo simulation, the ECAL-Track or ECAL-only energy would be all we need. However we are experimentalists and we want to use real data! And we want our MC simulatation to match that data, particulary the energy scale. In the ECAL short exercise, our ECAL friends described how the calibrate data, however those calibrations are imperfect for various reasons leading to data having a slighly different energy scale and resolution to Monte Carlo. Additionally there is another effect from the fact the data is imperfectly simulated and applying a correction based on MC to the data can lead to a small miss-calibration. Therefore to solve both these effects derrive residual energy corrections (also known as scale& smearing) to calibrate the data to the MC and ensure the Monte Carlo resolution matches that of the data. 
+ 
+The size of the residual energy corrections is directly related to how good the calibration of the ECAL at the time of the reconstruction of the data are.  Calibrating a detector is a time consuming task requring significant amounts of data so initial calibrations tend to require significant residual corrections while re-recos often require neglible corrections.  Therefore it is extremely important to use the residual corrections appripriate to your data/MC combination. 
 
+The residual corrections consist of a scale correction for data and a resolution correction for Monte Carlo. The data scale is corrected back to the MC scale while the Monte Carlo energy is smeared to match the data resolution.  The data scale corrections are currently binned in run nr (as the scale can shift over the course of the year), eta (different parts of the ECAL may be calibrated with different precision), r9 (data and simulation may have slightly different responses to material effects) and gain (different ecal gains may have different responses). The smearing corrections are binned in eta. 
 
-Energy correction flow of e/gamma objects is the following:
+The residual corrections are derived using the Z peak, with the peak position setting the data scale correction and the peak width setting the extra smearing needed for MC. Note, it is intentional that the MC always has a slightly better resolution than in data. Question why do you think we do that?
 
-<img alt="Screen_Shot_2018-04-16_at_7.42.02_pm.png" height="140" src="%ATTACHURL%/Screen_Shot_2018-04-16_at_7.42.02_pm.png" title="Screen_Shot_2018-04-16_at_7.42.02_pm.png" width="464" />
+Note these corrections are applied to the ECAL energy only as they are to account for ECAL energy discrepances. The ECAL only energy is then recombined with the tracker momentum to give the ECAL-Track combined energy
 
-
-
-This is taken from https://twiki.cern.ch/twiki/pub/CMS/SWGuideCMSPhysicsObjectSchoolBARI2017EGamma/CMSPOS2017-Part2.pdf by L. Soffi, presented in CMS physics object school in Bari in 2017.
-
-So as you can see, there are several levels at which corrections are applied. In this exercise, we will not learn all the levels of corrections. We will learn two most important levels of corrections for electrons and photons:
-   * Refined Super-Cluster (SC) corrections: Needed to take care of energy lost in gaps, cracks etc
-   * Residual data-MC corrections(also performed on refined SCs): Needed for *good* data-MC agreement
-
-To start learning about it, we first need to run the *run_mc2017_94X.py* . Before we run it, let's have a look at the *ggNtuplizer_electrons.cc*. For today's exercise, we access three energy variables:
-
-   * Raw energy: no regression, no data-MC scale corrections
-   * Energy post regression, but no data-MC scale corrections
-   * Energy post regression AND post data-MC scale corrections
-
-Ways to access the above 3 variables (see in *ggNtuplizer_electrons.cc*) 
-Raw energy:
-<verbatim>eleSCRawEn_         .push_back(iEle->superCluster()->rawEnergy());</verbatim>
-
-Energy post regression:
-<verbatim>eleSCEn_            .push_back(iEle->superCluster()->energy());</verbatim>
-
-Energy post regression AND post data-MC scale corrections:
-<verbatim>eleCalibEn_         .push_back(iEle->userFloat("ecalEnergyPostCorr"));</verbatim>
-
-So now we know which variables are important and how to run, let's do the following:
-
-First change the input file to: 
+The corrected energies are then stored as
 <verbatim>
-/store/mc/RunIIFall17MiniAODv2/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/0CAD0E35-8B42-E811-99FD-008CFAC91E10.root
-</verbatim>
+eleCalibEcalEn_         .push_back(iEle->userFloat("ecalEnergyPostCorr"));
+eleCalibEn_             .push_back(iEle->userFloat("ecalTrkEnergyPostCorr"));
+<\verbatim>
 
-Those who do not have the grid password, can access from here: 
-<verbatim>
-/eos/cms/store/group/phys_egamma/tnp/0CAD0E35-8B42-E811-99FD-008CFAC91E10.root 
-</verbatim>
+Lets first have a look at them and how they differ to their uncorrected values. Plot eleCalibEcalEn/eleEcalEn and eleCalibEn/eleEn for both data and MC. What do you notice? Can you explain the differences?
 
-Now run like this: 
-<verbatim>
-cmsRun run_mc2017_94X.py
-</verbatim>
-
-You will get a root file: *ggtree_mc.root*. 
-
-To analyze the above rootfile, we need to download the following:
-
-   * EGMregression.C
-
-   * EGMregression.h
-
-Take them from here: /afs/cern.ch/user/s/swmukher/public/cmspos19   
-
-(Thanks to Shilpi Jain for preparing these codes).
-
-Run the above like this: 
-<verbatim>
-root -l -b
-.L EGMregression.C
-EGMregression t
-t.Loop(0)
-</verbatim>
-
-You will get a root file named *histo_mc.root*
-
-Let's start checking things one by one.
-
-1 Compare the raw energy with the energy from EGM regression (i.e. before scale and smearing).
-
-<verbatim>
-root -l histo_mc.root 
-hrawE->SetLineColor(1);
-hrawE->SetLineWidth(2);
-hrawE->Draw()
-hcorrE->SetLineColor(2);
-hcorrE->SetLineWidth(2);
-hcorrE->Draw("sames");</verbatim>
-
-You will see something like this:
-
-* Raw Energy and Corrected energy (before scale and smearing):  
-<img alt="plot_rawEAndCorrE.png" height="475" src="%ATTACHURLPATH%/plot_rawEAndCorrE.png" width="698" />
-
-
-<br>%ICON{led-green}% Question: What is the level of corrections? Hint: For each event, calculate the ratio of raw energy to the corrected energy and fill in a histogram.
-
-   1 Form the Z mass using two electrons. This is needed to be done using the above 3 definitions of energies. So the task is to compare the masses from the above 3 definitions by plotting on one canvas. histo_mc.root already has these masses formed. Plot the 3 masses as follows:
-
-<verbatim>
-root -l histo_mc.root 
-hrawM->SetLineColor(1);
-hrawM->SetLineWidth(2);
-hegmRM->SetLineColor(2);
-hegmRM->SetLineWidth(2);
-hcalibM->SetLineColor(3);
-hcalibM->SetLineWidth(2);
-hcalibM->Draw();
-hegmRM->Draw("sames");
-hrawM->Draw("sames");</verbatim>
-
-You will see something like this:
-
-* Di-electron invariant mass using the 3 definitions of energy: 
-<img alt="plot_3Masses.png" height="475" src="%ATTACHURLPATH%/plot_3Masses.png" width="698" />
-
-
-<br>%ICON{led-green}% Question: Which one is nearer to the Z peak and which one has the best resolution?
-
-NEXT: Repeat the above same exercise for Data as is done for MC.
-
-For this, take the input root file to be:
-
-<verbatim>
-Input root file: /store/data/Run2017C/SingleElectron/MINIAOD/31Mar2018-v1/60000/26B0FDF4-B537-E811-824C-44A842CFCA00.root
-
-and run: cmsRun run_data2017_94X.py</verbatim>
-
-The output root file is: ggtree_data.root (or you can copy from here: ~shilpi/public/ggtree_data.root) To analyze the above root file, run
-
-<verbatim>
-root -l -b
-.L EGMregression.C
-EGMregression t
-t.Loop(1)</verbatim>
-
-*Note the 1 in the argument of Loop(1)*
-
-To compare the mass histograms in data and MC, you need to do this:
-<verbatim>
-root -l -b histo_mc.root histo_data.root
-hegmRM->SetLineColor(1);
-hegmRM->SetLineWidth(2);
-hegmRM->Draw();
-_file0->cd()
-hegmRM->SetLineColor(2);
-hegmRM->SetLineWidth(2);
-hegmRM->Draw("sames");</verbatim>
-
+Now lets demonstrate using this. 
 %ENDTWISTY%
