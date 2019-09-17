@@ -93,7 +93,7 @@ void EleVecBranches::init(TTree* tree)
   for(auto& name : names){
     DataType dataType = name.second;
     auto setAddress = [&counts,&name,tree](auto& data,auto& nameMap,DataType& dataType){
-      std::cout <<"setting address  "<<name.first<<" count "<<counts[static_cast<int>(dataType)]<<" data tpye "<<static_cast<int>(dataType)<<std::endl;
+      std::cout <<"setting address  "<<name.first<<" count "<<counts[static_cast<int>(dataType)]<<" data type "<<static_cast<int>(dataType)<<std::endl;
       tree->SetBranchAddress(name.first.c_str(),&data[counts[static_cast<int>(dataType)]]);
       nameMap[name.first]=counts[static_cast<int>(dataType)];
       counts[static_cast<int>(dataType)]++;
@@ -165,10 +165,15 @@ void EleBranches::fill(const EleVecBranches& inTreeBranchData,size_t index)
 {
   auto convert = [index](auto& inData,auto& outData){
     for(size_t dataNr=0;dataNr<inData.size();dataNr++){
-      outData[dataNr]=(*inData[dataNr])[index];
+      //small fixed when I forgot to fill some branches
+      //std::cout <<"dataNr "<<dataNr<<std::endl;
+      //std::cout <<"index "<<index <<" size "<<inData[dataNr]->size()<<std::endl;
+      if(index<inData[dataNr]->size()){
+	outData[dataNr]=(*inData[dataNr])[index];
+      }
     }
   };
-
+  
   convert(inTreeBranchData.dataFloat,dataFloat);
   convert(inTreeBranchData.dataInt,dataInt);
   convert(inTreeBranchData.dataUShort,dataUShort);
