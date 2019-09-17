@@ -198,12 +198,8 @@ struct ConvertToMassNtup {
 
 void ConvertToMassNtup::convert(TTree* inTree,const std::string& outputFilename)
 {
-  //so if this is chain, we need to read it first otherwise it'll wipe all our branch addresses
-  //yes, I know, this is non obvious
-  int nrEntries = inTree->GetEntries();
-  std::cout <<"init read tree"<<std::endl;
   inBranches.init(inTree);
-  std::cout <<"out read tree"<<std::endl;
+
   TFile* outFile = new TFile(outputFilename.c_str(),"RECREATE");
   TTree* outTree = new TTree("EventMassTree","");
 
@@ -213,8 +209,8 @@ void ConvertToMassNtup::convert(TTree* inTree,const std::string& outputFilename)
 
   ele1.init(inBranches,outTree,0);
   ele2.init(inBranches,outTree,1);
-  std::cout <<"inited "<<std::endl;
-  
+
+  int nrEntries = inTree->GetEntries();
   for(int entryNr=0;entryNr<nrEntries;entryNr++){
     inTree->GetEntry(entryNr);
     if(entryNr%10000==0) std::cout <<"entryNr "<<entryNr<<" nr Entries "<<nrEntries<<std::endl;
