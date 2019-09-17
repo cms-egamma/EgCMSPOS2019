@@ -106,37 +106,41 @@ void HistFuncs::setHistAttributes(TH1* hist,int histNr)
   setHistAttributes(hist,colour,1,marker);
 }
 
-std::vector<TH1*> HistFuncs::compVars(TTree* tree,int nrBins,float xmin,float xmax,const std::vector<std::string>& vars,const std::string& cuts)
+TH1* HistFuncs::compVars(TTree* tree,int nrBins,float xmin,float xmax,const std::vector<std::string>& vars,const std::string& cuts)
 { 
   
-  TLegend* leg = new TLegend(0.3,0.5,0.6,0.6);
+  TLegend* leg = new TLegend(0.577,0.770-0.05*vars.size(),0.878,0.870);    
+  leg->SetBorderSize(0);
+  leg->SetFillStyle(0);
   std::vector<TH1*> hists;
 
   std::string varStr;
   for(size_t varNr=0;varNr<vars.size();varNr++){
     if(varNr==0) varStr=vars[varNr];
     else varStr+=":"+vars[varNr];
-    TH1* hist = new TH1D(("var"+std::to_string(varNr)+"Hist").c_str(),"temp",nrBins,xmin,xmax);
+    TH1* hist = new TH1D(("var"+std::to_string(varNr)+"Hist").c_str(),";",nrBins,xmin,xmax);
     hist->Sumw2();
     hist->SetDirectory(0);
     leg->AddEntry(hist,vars[varNr].c_str(),"LP");
     setHistAttributes(hist,varNr);
     hists.push_back(hist);
   }
-  
+
   const std::vector<std::vector<float> > treeData = readTree(tree,varStr,cuts);
   for(const auto& treeEntry : treeData){
     for(size_t varNr=0;varNr<vars.size();varNr++){
       hists[varNr]->Fill(treeEntry[varNr]);
     }
   }
-   
+  
+  adjustYaxisMaximum(hists);
+ 
   for(size_t varNr=0;varNr<vars.size();varNr++){
     if(varNr==0) hists[varNr]->Draw();
     else hists[varNr]->Draw("SAME");
   }
   leg->Draw();
-  return hists;
+  return hists[0];
 }
 
 
@@ -159,7 +163,7 @@ void HistFuncs::adjustYaxisMaximum(std::vector<TH1*> hists)
   for(TH1* hist : hists){
     maximum = std::max(maximum,hist->GetMaximum());
   }
-  if(!hists.empty()) hists[0]->SetMaximum(maximum);
+  if(!hists.empty()) hists[0]->SetMaximum(maximum*1.1);
 
 }
 

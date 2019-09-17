@@ -25,7 +25,7 @@ public:
   
   static TH1* makeHist(TTree* tree,int nrBins,float xmin,float xmax,const std::string& var,const std::string& cuts);
   static TH1* compSigBkg(TTree* sigTree, TTree* bkgTree,int nrBins,float xmin,float xmax,const std::string& var,const std::string& commonCuts,const std::string& sigCuts,const std::string& bkgCuts,bool norm);
-  static std::vector<TH1*> compVars(TTree* tree,int nrBins,float xmin,float xmax,const std::vector<std::string>& vars,const std::string& cuts);
+  static TH1* compVars(TTree* tree,int nrBins,float xmin,float xmax,const std::vector<std::string>& vars,const std::string& cuts);
 
   static void setHistAttributes(TH1* hist,int histNr);
   static void setHistAttributes(TH1* hist,int colour,int lineWidth,int markerStyle);

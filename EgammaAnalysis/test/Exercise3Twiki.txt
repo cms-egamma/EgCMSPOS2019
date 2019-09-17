@@ -1,14 +1,14 @@
 %TWISTY{
   mode="div"
-  showlink="Show Exercise 3: Electron/Photon Energy Measurements"
-  hidelink="Hide Exercise 3: Electron/Photon Energy Measurements"
+  showlink="Show Exercise 4: Electron/Photon Energy Measurements"
+  hidelink="Hide Exercise 4: Electron/Photon Energy Measurements"
   showimgleft="%ICONURLPATH{toggleopen-small}%"
   hideimgleft="%ICONURLPATH{toggleclose-small}%"
 }%
 
 
 
----+ Exercise 3: Electron/Photon Energy Measurements
+---+ Exercise 4: Electron/Photon Energy Measurements
 
 This exercise will teach you about e/gamma energies estimates in CMS.
 
@@ -102,7 +102,7 @@ The corrected energies are then stored as
 <verbatim>
 eleCalibEcalEn_         .push_back(iEle->userFloat("ecalEnergyPostCorr"));
 eleCalibEn_             .push_back(iEle->userFloat("ecalTrkEnergyPostCorr"));
-<\verbatim>
+</verbatim>
 
 Lets first have a look at them and how they differ to their uncorrected values. Plot eleCalibEcalEn/eleEcalEn and eleCalibEn/eleEn for both data and MC. What do you notice? Can you explain the differences?
 

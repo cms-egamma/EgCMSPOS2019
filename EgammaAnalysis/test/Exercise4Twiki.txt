@@ -1,11 +1,11 @@
 %TWISTY{
   mode="div"
-  showlink="Show Exercise 4: Tag and Probe"
-  hidelink="Hide Exercise 4: Tag and Probe"
+  showlink="Show Exercise 3: Tag and Probe"
+  hidelink="Hide Exercise 3: Tag and Probe"
   showimgleft="%ICONURLPATH{toggleopen-small}%"
   hideimgleft="%ICONURLPATH{toggleclose-small}%"
 }%
----+ E/gamma Exercise 4: Tag and probe
+---+ E/gamma Exercise 3: Tag and probe
 
 The Tag and Probe is a generic method that uses narrow di-lepton resonances like Z or J/Psi to measure any sort of per-object 
 efficiencies (reconstruction, trigger or identification). The tag has a tight selection that has a low fake rate and the probe has a selection that is similar 

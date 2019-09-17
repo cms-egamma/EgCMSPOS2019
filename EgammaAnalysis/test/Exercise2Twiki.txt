@@ -29,7 +29,7 @@ Lets look at these variables and plot them. We will do it for real electrons and
 
 | *variable*  |  *CMSSW method*  |  *ntuple name*  |  *suggested range barrel*  |  *suggested range endcap*  |
 | full5x5_sigmaIetaIeta  |  full5x5_sigmaIetaIeta()  |  eleSigmaIEtaIEtaFull5x5  |  0.0 to 0.02  |  0.0 to 0.05  |
-| dEtaIn*  |  deltaEtaSuperClusterTrackAtVtx()  |  eledEtaAtVtx   |  -0.02 to 0.02  |  -0.02 to 0.02  |
+| dEtaInSeed  |  deltaEtaSeedClusterTrackAtVtx()  |  eledEtaSeedAtVtx   |  -0.02 to 0.02  |  -0.02 to 0.02  |
 | dPhiIn  |  deltaPhiSuperClusterTrackAtVtx()  |  eledPhiAtVtx  |  -0.1 to 0.1  |  -0.1 to 0.1  |
 | H/E  |  hcalOverEcal  |  eleHoverE  |  0.0 to 0.15  |  0.0 to 0.15  |
 | charged had isolation   |  pfIsolationVariables().sumChargedHadronPt  |  elePFChIso  |  0 to 20  |  0 to 20  |
@@ -37,8 +37,8 @@ Lets look at these variables and plot them. We will do it for real electrons and
 | photon isolation   |  pfIsolationVariables().sumPhotonHadronPt  |  elePFPhoIso  |  0 to 20  |  0 to 20  |
 | E/p_in   |  eSuperClusterOverP()  |  eleEoverP  |  0 to 5  |  0 to 5  |
 | expected missing inner hits   |   gsfTrack()->hitPattern()<br>.numberOfAllHits(reco::HitPattern::MISSING_INNER_HITS)  |  eleMissHits  |  0  to 5  |  0 to 5  |
-*note due to a bug in the ntuples dEtaInSeed which is what is used for the IDs is not present, dEtaIn is close enough for this exercise though. 
-
+| MVA-Iso*  |  userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values")  |  -1 to 1  |  -1 to  1  |
+*okay this isnt a "cut based ID variable" but its interesting to compare it for signal and background. More on this later...
 
 
 To make life easier, a set of utility functions in the package [[https://github.com/cms-egamma/EgCMSPOS2019/blob/master/EgammaAnalysis/interface/HistFuncs.h][HistFuncs]] are provided. These functions automatise the tedious parrts of comparing histograms. Of interest here is [[https://github.com/cms-egamma/EgCMSPOS2019/blob/master/EgammaAnalysis/interface/HistFuncs.h#L25][compSigBkg]] which compares signal and background for a given variable. We will select signal events by requiring electrons to be matched to a gen electron with pt>10 not from a tau decay. We will select background events by requiring that the electorn is not matched to a gen electron. In both cases we will use the same DYToJets MC sample. We have already produced the ntuples for you to save time. We will require that the electron is in the "good" region of the detector which is |eta|<1.4448 || 1.566<|eta|<2.5. We have saved a variable "eleRegion" which is equal to 0 if in the barrel region and 1 if in the endcap region. Finally to make it a fair comparison, we will do it for >30 GeV electrons. 
@@ -48,7 +48,7 @@ Here is an example for sigmaIEtaIEta
 <verbatim>
 root
 gSystem->Load("$CMSSW_BASE/lib/slc7_amd64_gcc700/libEgCMSPOS2019EgammaAnalysis.so");
-dyTree2018 = HistFuncs::makeChain("ggNtuplizer/EventTree","/eos/cms/store/group/phys_egamma/CMSPOS2019/ntuples/GGNtup/MINIAODSIM/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/102X_upgrade2018_realistic_v15-v1_MINIAODSIM_GGNtup/190913_145502/0000/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_ntuples_102X_upgrade2018_realistic_v15-v1_GGNtup_*.root",10); //the 10 is to use 1/10th of the stats for time reasons, change to 1 to get them all
+dyTree2018 = HistFuncs::makeChain("ggNtuplizer/EventTree","/eos/cms/store/group/phys_egamma/CMSPOS2019/ntuples/GGNtupV2/MINIAODSIM/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/102X_upgrade2018_realistic_v15-v1_MINIAODSIM_GGNtupV2/190915_203701/0000/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_ntuples_102X_upgrade2018_realistic_v15-v1_GGNtupV2_*.root",10); //the 10 is to use 1/10th of the stats for time reasons, change to 1 to get them all
 hist = HistFuncs::compSigBkg(dyTree2018,dyTree2018,100,0,0.02,"eleSigmaIEtaIEtaFull5x5","elePt>30 && eleRegion==0","eleGenPt>10 && eleGenFromTau==0","eleGenPt<=0",true)
 </verbatim>
 
@@ -60,8 +60,6 @@ which will print fileName+".png" and fileName+".C". It is well worth always prin
 
 
 *Exercise 2.1*: plot each variable for the barrel and endcap seperately. Can you explain why they look the shape they do for signal and for background?
-
-
 
 
 ---+++ Applying the selection
@@ -184,6 +182,22 @@ EventTree ->Draw("elePt","eleIDbit[]>>5&1","sames") //super tight in blue
 </verbatim>
 
 <br />%ICON{led-green}% Question: How many electrons passed tight ID, and how many passed super tight ID? Hint: if you drag and move stat-bar, then you will see the number of events of both cases.
+
+---+++ MC measured Efficiencies and Backgrounds 
+
+It is very important to see how ID variables behave vs et/eta/pu when setting cuts. A key way to do this is to look at efficiencies usiing Monte Carlo. Lets investigate the variables, setting cuts on Et. An example for H/E:
+
+<verbatim>
+root EgammaAnalysis/test/rootSetup.C
+dyTree2018 = HistFuncs::makeChain("ggNtuplizer/EventTree","/pnfs/pp.rl.ac.uk/data/cms/store/user/sharper/10210/GGNtupV2/MINIAODSIM/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/102X_upgrade2018_realistic_v15-v1_MINIAODSIM_GGNtupV2/190915_203701/0000/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_ntuples_102X_upgrade2018_realistic_v15-v1_GGNtupV2_*.root",10);
+histRel = HistFuncs::makeEffHist(dyTree2018,100,20,60,"eleGenPt","elePt>20 && eleRegion==0 && eleGenPt>10 && eleGenFromTau==0","eleHoverE<0.05") 
+histAbs = HistFuncs::makeEffHist(dyTree2018,100,20,60,"eleGenPt","elePt>20 && eleRegion==0 && eleGenPt>10 && eleGenFromTau==0","eleHoverE*eleEcalEn<4") 
+histRel->SetLineColor(2);
+histRel->Draw();
+histAbs->Draw("SAME");
+</verbatim>
+
+<br />%ICON{led-green}% Question: What do you notice? Can you do look at other ID variables an put cuts on them?
 
 %ENDTWISTY%
 
