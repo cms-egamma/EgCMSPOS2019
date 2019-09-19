@@ -24,7 +24,7 @@ cmsenv
 git cms-merge-topic cms-egamma:EgammaID_1023 #if you want the V2 IDs, otherwise skip
 git cms-init
 scram b -j8
-git clone -b Nm1 https://github.com/swagata87/EgammaAnalysis-TnPTreeProducer EgammaAnalysis /TnPTreeProducer
+git clone -b Nm1 https://github.com/swagata87/EgammaAnalysis-TnPTreeProducer EgammaAnalysis/TnPTreeProducer
 cd EgammaAnalysis /TnPTreeProducer/
 cmsRun python/TnPTreeProducer_cfg.py doEleID=True doPhoID=True isMC=False maxEvents=5000
 </verbatim>

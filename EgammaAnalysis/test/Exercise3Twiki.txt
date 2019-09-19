@@ -12,6 +12,8 @@
 
 This exercise will teach you about e/gamma energies estimates in CMS.
 
+Before starting this exercise, we will need to update our code. In your $CMSSW_BASE/src/EgCMSPOS2019 directory please do a "git pull" to get the latest version. 
+
 ---++ Energy Measurements
 An electrons energy is measured by the calorimeter while its momentum is measured by the tracker. As electrons have to have at least 4 GeV of energy in CMS, the 0.511 MeV mass of the electron can be safely neglected and we can take the electrons energy to be equal to its momentum. A photon has no track so only its energy can be measured.
 
@@ -28,6 +30,32 @@ eleSeedRawEn_.push_back(iEle->superCluster()->seed()->energy());
 </verbatim>
 
 <br />%ICON{led-green}% Question: Plot the ratio of each raw energy to the true or gen energy of the electron. What do you notice about this? How does the supercluster energy compare to the seed cluster energy?
+
+Lets quantify the performance and fit a resolution function. There are two functions we fit, [[https://en.wikipedia.org/wiki/Crystal_Ball_function][crystall ball function]] a double sided crystal ball function and Cruijff function. These functions are not simple Gausians due to radiative tails of the electron. 
+
+We will use roofit to fit the distribution, similar to your pre-exercises. However I've written [[https://github.com/cms-egamma/EgCMSPOS2019/blob/master/EgammaAnalysis/src/ResFitter.cc#L77-L118][some code to do this for us]]. Have a look at the function, it should all look very familar. 
+ 
+<verbatim>
+dyTree2018 = HistFuncs::makeChain("ggNtuplizer/EventTree","/eos/cms/store/group/phys_egamma/CMSPOS2019/ntuples/GGNtupV2/MINIAODSIM/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/102X_upgrade2018_realistic_v15-v1_MINIAODSIM_GGNtupV2/190915_203701/0000/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_ntuples_102X_upgrade2018_realistic_v15-v1_GGNtupV2_*",10)
+hist = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleRegion==0 && eleGenEn>0 && eleGenEn>30 && eleGenEn<40")
+ResFitter fitter;
+fitResDCB = fitter.makeDCBFit(hist,0.5,1.5)
+fitResDCB.plot->Draw()
+</verbatim>
+
+<verbatim>
+we can also compare to a Cruijff function
+fitResDCB = fitter.makeCruijffFit(hist,0.5,1.5)
+fitResDCB.plot->Draw()
+</verbatim>
+
+That was just for the barrel. You can make a histogram for different eta or gen et cuts to see how it changes. Also applying a selection to it.
+
+Finally it is useful to see where we have poor energy loss so we can better understand. Lets make our favourite $eta-phi$ plot for electrons whos supercluster energy recoed only 90% or less of its true energy for electrons with eleGenEn>30 GeV.
+<verbatim>
+dyTree2018->Draw("eleSCPhi:eleSCEta","eleSCRawEn/eleGenEn<0.9 && eleGenEn>0 && eleGenEn>30")
+<verbatim>
+
 
 ---++ ECAL Energy Corrections
 
@@ -49,6 +77,50 @@ There are three ecal energy corrections
       * applied on top of the refined supercluster energy of the electron/photon. Note, it is not stored in the supercluster itself but as the ecal energy of the electron/photon
       * electrons & photons have seperately trained corrections
       * this is the energy you will use and it represents the best possible correction
+
+ 
+Before we look at these variables we will first understand how they are produced. We use the following package: [[https://github.com/cms-egamma/EgRegresTrainerLegacy][EgRegreTrainerLegacy]] although we want to move towards more sophisicated tools such as Keras. A good talk on the subject is by Josh Bendavid is linked [[https://indico.cern.ch/event/306030/contributions/704007/attachments/582222/801455/egmGED-reg-Mar24-2014.pdf]]. It produces a gradient boosted decision forest based on [[https://github.com/cms-sw/cmssw/blob/CMSSW_10_6_2/RecoEgamma/EgammaTools/plugins/EGRegressionModifierV3.cc#L224-L272][many input parameters]]. 
+
+Now lets make an energy correction! We will use a specially skimmed ntuple to speed things up. This only has real electron in it (eleGenEn>0 cut)
+
+So what we know from our investigations is that the scale will be different in different regions of the detector. So we what we need to do is group together electrons with a similar scale and correct them so their scale is 1.  An example. Lets consider barrel electrons in two areas of the calorimeter. We know iEta==25 is a gap where we lose energy. So lets compare it to iEta==30 where we have a good measurement esimate.
+
+<verbatim>
+histIEta25Or30 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25 || eleIEtaOrX==30)")
+
+histIEta25 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && eleIEtaOrX==25")
+fitResIEta25 = fitter.makeDCBFit(histIEta25,0.5,1.5)
+fitResIEta25.plot->Draw()
+
+histIEta25Or30 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25 && eleIEtaOrX==30)")
+histIEta25Or30 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25 || eleIEtaOrX==30)")
+histIEta25Or30->Draw()
+histIEta25 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25)")
+fitResIEta25 = fitter.makeDCBFit(histIEta25,0.5,1.5)
+fitResIEta25.plot->Draw()
+0.962
+fitResIEta30 = fitter.makeDCBFit(histIEta30,0.5,1.5)
+fitResIEta25.plot->Draw()
+fitResIEta30 = fitter.makeDCBFit(histIEta30,0.5,1.5)
+fitResIEta30.plot->Draw()
+histIEta25Corr = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn/0.961","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25)")
+histIEta30Corr = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn/0.971","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==30)")
+histIEta25Corr->Add(histIEta30Corr)
+histIEta25Corr->Draw()
+histIEta25Or30->SetLineColor(2)
+histIEta25Corr->Draw()
+histIEta25Or30->Draw()
+histIEta25Corr->Draw("SAME")
+fitter.makeDCBFit(histIEta25Corr,0.5,1.5).plot->Draw()
+fitter.makeDCBFit(histIEta25or30,0.5,1.5).plot->Draw()
+fitter.makeDCBFit(histIEta25Or30,0.5,1.5).plot->Draw()
+fitter.makeDCBFit(histIEta25Corr,0.5,1.5).plot->Draw()
+fitter.makeDCBFit(histIEta25Or30,0.5,1.5).plot->Draw()
+
+
+</verbatim>
+
+
 
 
 We will now look at the corrected energy variables 
@@ -105,6 +177,16 @@ eleCalibEn_             .push_back(iEle->userFloat("ecalTrkEnergyPostCorr"));
 </verbatim>
 
 Lets first have a look at them and how they differ to their uncorrected values. Plot eleCalibEcalEn/eleEcalEn and eleCalibEn/eleEn for both data and MC. What do you notice? Can you explain the differences?
+     
+Now lets compare data and MC. To do this we will use a new set of ntuples to simplify things. These ntuples are generated from our ggNtuples but instead of each branch being a vector of entries with each entry corresponding to a given electron, we now have single entry branches corresponding to ele1 and ele2, our first and second electron in a pair plus a mass. This makes it much easier and faster to compare a mass spectrum. Now our branch names are different, instead of "eleX" its "ele1X" and "ele2X". Each event can have multiple entries in the tree such that all possible electron pairs are represented. 
 
-Now lets demonstrate using this. 
+
+
+
+Finally lets understand what the error on the energy is. Naively, one would assume that correctedEcalEnergyError() or p4Error() would return the error on the energy. However this is not quite correct. This value is actually sigma_DCB as estimated by our BDT. So it gives a resonable estimate of the resolution as long as it is relatively small. Once it becomes large (>5% of the ecal energy) it is effectively a random number which tells you "this electron is poorly measured".
+
+The energy on the electron scale is actually from the scale and smearing and is a measure of how confident we are that we have calibrated the energy. A discussion of the energy scale uncertainties can be found here [[https://twiki.cern.ch/twiki/bin/view/CMS/EgammaMiniAODV2#Energy_Scale_and_Smearing][EgammaMiniAODV2#Energy_Scale_and_Smearing]]. We have eleScale_stat_up, eleScale_stat_dn, eleScale_syst_up, eleScale_syst_dn, eleScale_gain_up and eleScale_gain_dn. Of these values, the stat error is neglible, the gain error is only important for >100 GeV (and really only >300GeV) so we will focus on the syst error. 
+
+You can now scale the data up and down by syst error  
+  
 %ENDTWISTY%

@@ -47,7 +47,7 @@ Here is an example for sigmaIEtaIEta
 
 <verbatim>
 root
-gSystem->Load("$CMSSW_BASE/lib/slc7_amd64_gcc700/libEgCMSPOS2019EgammaAnalysis.so");
+gSystem->Load("libEgCMSPOS2019EgammaAnalysis.so");
 dyTree2018 = HistFuncs::makeChain("ggNtuplizer/EventTree","/eos/cms/store/group/phys_egamma/CMSPOS2019/ntuples/GGNtupV2/MINIAODSIM/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/102X_upgrade2018_realistic_v15-v1_MINIAODSIM_GGNtupV2/190915_203701/0000/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8_ntuples_102X_upgrade2018_realistic_v15-v1_GGNtupV2_*.root",10); //the 10 is to use 1/10th of the stats for time reasons, change to 1 to get them all
 hist = HistFuncs::compSigBkg(dyTree2018,dyTree2018,100,0,0.02,"eleSigmaIEtaIEtaFull5x5","elePt>30 && eleRegion==0","eleGenPt>10 && eleGenFromTau==0","eleGenPt<=0",true)
 </verbatim>
@@ -126,7 +126,7 @@ Many times it is useful to add or remove individual cuts of a selection. This co
 
 Our ID framework also provides a mechanism for this, for each ID we save a 32-bit int with the bits corresponding to whether an individual cut passed/failed. 
 
-For the cut based selection the summary of the bits are:
+For the cut based selection (veto, loose, medium, tight) the summary of the bits are:
 |  *bit nr*  |  *cut*  |  *decimal*  |  *hexadecimal*  | 
 |  0  |MinPtCut  |  1  |  0x1  |
 |  1  |GsfEleSCEtaMultiRangeCut  |  2  |  0x2  |
