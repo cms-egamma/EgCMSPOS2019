@@ -37,6 +37,9 @@ public:
   static void print(const std::string& fileName,const std::string& canvasName);
   template<typename T,typename Container=TCanvas>
   static std::vector<T*> getFromCanvas(Container* c1,const std::string& className,int verbose=0);
+  static void getHistIntegral(const TH1* theHist,double xMin,double xMax,double& nrEvents,double& nrEventsErr);
+  static double getHistIntegral(const TH1* theHist,double xMin,double xMax);
+  static int getBinNr(const TH1* theHist,double x);
 };
 
 template<typename T,typename Container>

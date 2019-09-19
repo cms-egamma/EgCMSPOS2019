@@ -118,16 +118,17 @@ struct EleBranches {
   std::vector<ULong64_t> dataULong;
   std::vector<std::vector<int>> dataVecInt;
   std::vector<std::vector<float>> dataVecFloat;
-  size_t ptIndex,etaIndex,phiIndex;
+  size_t ptIndex,etaIndex,phiIndex,genEnIndex;
 
   void init(const EleVecBranches& inTreeBranchData,TTree *tree,int index); 
   void fill(const EleVecBranches& inTreeBranchData,size_t index);
 
-  TLorentzVector p4(){
+  TLorentzVector p4()const{
     TLorentzVector eleP4;
     eleP4.SetPtEtaPhiM(dataFloat[ptIndex],dataFloat[etaIndex],dataFloat[phiIndex],0.);
     return eleP4;
   }
+  float genEn()const{return dataFloat[genEnIndex];}
 
 };
 
@@ -149,7 +150,8 @@ void EleBranches::init(const EleVecBranches& branchData,TTree *tree,int index)
       counts[static_cast<int>(dataType)]++;
     };
 
-    std::string branchName = "ele"+std::to_string(index+1)+name.first.substr(3); //starts with ele
+    std::string branchName = name.first;
+    if(index>=0) branchName = "ele"+std::to_string(index+1)+name.first.substr(3); //starts with ele
     auto dataType = name.second;
     if(dataType ==DataType::kFloat) createBranch(dataFloat,dataType,branchName);
     else if(dataType ==DataType::kInt) createBranch(dataInt,dataType,branchName);
@@ -190,6 +192,7 @@ void EleBranches::fill(const EleVecBranches& inTreeBranchData,size_t index)
   ptIndex = getIndex(inTreeBranchData.dataFloatNameMap,"elePt");
   etaIndex = getIndex(inTreeBranchData.dataFloatNameMap,"eleEta");
   phiIndex = getIndex(inTreeBranchData.dataFloatNameMap,"elePhi");
+  genEnIndex = getIndex(inTreeBranchData.dataFloatNameMap,"eleGenEn");
   
 }
 
@@ -233,6 +236,41 @@ void ConvertToMassNtup::convert(TTree* inTree,const std::string& outputFilename)
 	}
       }
 
+    }
+  }
+  outFile->Write();
+  outFile->Close();
+ 
+}
+struct NtupSkimmer {
+  EleVecBranches inBranches;
+  EleBranches ele;
+  void convert(TTree* inTree,const std::string& outputFilename);
+};
+
+void NtupSkimmer::convert(TTree* inTree,const std::string& outputFilename)
+{
+  inBranches.init(inTree);
+
+  TFile* outFile = new TFile(outputFilename.c_str(),"RECREATE");
+  TTree* outTree = new TTree("ggNtuplizer/EventTree","");
+
+  //float mass;
+  float eleNrTree;
+  outTree->Branch("eleNr",&eleNrTree,"eleNr/I");
+  
+
+  ele.init(inBranches,outTree,-1);
+
+  int nrEntries = inTree->GetEntries();
+  for(int entryNr=0;entryNr<nrEntries;entryNr++){
+    inTree->GetEntry(entryNr);
+    if(entryNr%10000==0) std::cout <<"entryNr "<<entryNr<<" nr Entries "<<nrEntries<<std::endl;
+    for(size_t eleNr=0;eleNr<inBranches.dataFloat.front()->size();eleNr++){
+      ele.fill(inBranches,eleNr);
+      eleNrTree = eleNr;
+      
+      if(ele.genEn()>0) outTree->Fill();
     }
   }
   outFile->Write();

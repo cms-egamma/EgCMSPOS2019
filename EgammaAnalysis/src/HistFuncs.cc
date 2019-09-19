@@ -196,3 +196,36 @@ void HistFuncs::print(const std::string& fileName,const std::string& canvasName)
   canvas->Print(outputNamePng.c_str());
   canvas->Print(outputNameC.c_str());
 }
+
+void HistFuncs::getHistIntegral(const TH1* theHist,double xMin,double xMax,double& nrEvents,double& nrEventsErr)
+{
+  nrEvents=0.;
+  nrEventsErr=0.;
+  int lowBinNr=getBinNr(theHist,xMin);
+  int highBinNr=getBinNr(theHist,xMax);
+  if(theHist->GetBinLowEdge(highBinNr)==xMax) highBinNr--; //dont include bin as it only has entries above xMax
+  for(int binNr=lowBinNr;binNr<=highBinNr;binNr++){
+    nrEvents+=theHist->GetBinContent(binNr);
+    nrEventsErr+=theHist->GetBinError(binNr)*theHist->GetBinError(binNr);
+  }
+  nrEventsErr=sqrt(nrEventsErr);
+}
+
+double HistFuncs::getHistIntegral(const TH1* theHist,double xMin,double xMax)
+{
+  
+  double nrEvents=0.;
+  double nrEventsErr=0.;
+  getHistIntegral(theHist,xMin,xMax,nrEvents,nrEventsErr);
+  return nrEvents;
+}
+
+int HistFuncs::getBinNr(const TH1* theHist,double x)
+{
+  //nasty logic but works perfectly
+ int binNr = 0;
+  while(binNr<=theHist->GetNbinsX() && x>=theHist->GetBinLowEdge(binNr+1)){
+    binNr++;
+  }
+  return binNr;
+}
