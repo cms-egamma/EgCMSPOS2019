@@ -253,7 +253,7 @@ void NtupSkimmer::convert(TTree* inTree,const std::string& outputFilename)
   inBranches.init(inTree);
 
   TFile* outFile = new TFile(outputFilename.c_str(),"RECREATE");
-  TTree* outTree = new TTree("ggNtuplizer/EventTree","");
+  TTree* outTree = new TTree("EventTree","");
 
   //float mass;
   float eleNrTree;

@@ -229,3 +229,25 @@ int HistFuncs::getBinNr(const TH1* theHist,double x)
   }
   return binNr;
 }
+
+TH1* HistFuncs::compareDataMC(TH1* dataHist,TH1* mcHist,bool norm)
+{
+  mcHist->SetTitle(";m(ee) [GeV];#events");
+  if(norm) mcHist->Scale(dataHist->Integral()/mcHist->Integral());
+  mcHist->SetLineColor(kOrange+7);
+  mcHist->SetLineWidth(2);
+  mcHist->Draw("HIST");
+  dataHist->SetMarkerStyle(8);
+  dataHist->SetMarkerColor(kBlue+2);
+  dataHist->SetLineColor(kBlue+2);
+  dataHist->Draw("SAME EP");
+
+  TLegend* leg = new TLegend(0.143,0.774,0.443,0.876);
+  leg->AddEntry(dataHist,"data","LP");
+  leg->AddEntry(mcHist,"MC","LP");
+  leg->SetFillStyle(0);
+  leg->SetBorderSize(0);
+  leg->Draw();
+  
+  return mcHist;
+}

@@ -40,6 +40,7 @@ public:
   static void getHistIntegral(const TH1* theHist,double xMin,double xMax,double& nrEvents,double& nrEventsErr);
   static double getHistIntegral(const TH1* theHist,double xMin,double xMax);
   static int getBinNr(const TH1* theHist,double x);
+  static TH1* compareDataMC(TH1* dataHist,TH1* mcHist,bool norm);
 };
 
 template<typename T,typename Container>

@@ -51,10 +51,10 @@ fitResDCB.plot->Draw()
 
 That was just for the barrel. You can make a histogram for different eta or gen et cuts to see how it changes. Also applying a selection to it.
 
-Finally it is useful to see where we have poor energy loss so we can better understand. Lets make our favourite $eta-phi$ plot for electrons whos supercluster energy recoed only 90% or less of its true energy for electrons with eleGenEn>30 GeV.
+Finally it is useful to see where we have poor energy loss so we can better understand. Lets make our favourite eta-phi plot for electrons whos supercluster energy recoed only 90% or less of its true energy for electrons with eleGenEn>30 GeV.
 <verbatim>
 dyTree2018->Draw("eleSCPhi:eleSCEta","eleSCRawEn/eleGenEn<0.9 && eleGenEn>0 && eleGenEn>30")
-<verbatim>
+</verbatim>
 
 
 ---++ ECAL Energy Corrections
@@ -83,44 +83,37 @@ Before we look at these variables we will first understand how they are produced
 
 Now lets make an energy correction! We will use a specially skimmed ntuple to speed things up. This only has real electron in it (eleGenEn>0 cut)
 
-So what we know from our investigations is that the scale will be different in different regions of the detector. So we what we need to do is group together electrons with a similar scale and correct them so their scale is 1.  An example. Lets consider barrel electrons in two areas of the calorimeter. We know iEta==25 is a gap where we lose energy. So lets compare it to iEta==30 where we have a good measurement esimate.
+So what we know from our investigations is that the scale will be different in different regions of the detector. So we what we need to do is group together electrons with a similar scale and correct them so their scale is 1.  An example. Lets consider barrel electrons in two areas of the calorimeter. We know iEta==25 is a gap where we lose energy. So lets compare it to iEta==30 where we have a good measurement esimate. 
 
+First plot the energy of the combined data sample:
 <verbatim>
 histIEta25Or30 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25 || eleIEtaOrX==30)")
-
-histIEta25 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && eleIEtaOrX==25")
-fitResIEta25 = fitter.makeDCBFit(histIEta25,0.5,1.5)
-fitResIEta25.plot->Draw()
-
-histIEta25Or30 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25 && eleIEtaOrX==30)")
-histIEta25Or30 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25 || eleIEtaOrX==30)")
-histIEta25Or30->Draw()
-histIEta25 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25)")
-fitResIEta25 = fitter.makeDCBFit(histIEta25,0.5,1.5)
-fitResIEta25.plot->Draw()
-0.962
-fitResIEta30 = fitter.makeDCBFit(histIEta30,0.5,1.5)
-fitResIEta25.plot->Draw()
-fitResIEta30 = fitter.makeDCBFit(histIEta30,0.5,1.5)
-fitResIEta30.plot->Draw()
-histIEta25Corr = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn/0.961","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25)")
-histIEta30Corr = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn/0.971","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==30)")
-histIEta25Corr->Add(histIEta30Corr)
-histIEta25Corr->Draw()
-histIEta25Or30->SetLineColor(2)
-histIEta25Corr->Draw()
-histIEta25Or30->Draw()
-histIEta25Corr->Draw("SAME")
-fitter.makeDCBFit(histIEta25Corr,0.5,1.5).plot->Draw()
-fitter.makeDCBFit(histIEta25or30,0.5,1.5).plot->Draw()
-fitter.makeDCBFit(histIEta25Or30,0.5,1.5).plot->Draw()
-fitter.makeDCBFit(histIEta25Corr,0.5,1.5).plot->Draw()
-fitter.makeDCBFit(histIEta25Or30,0.5,1.5).plot->Draw()
-
-
+fitResIEta25Or30 = fitter.makeDCBFit(histIEta25Or30,0.5,1.5)
+fitResIEta25Or30.plot->Draw();		
 </verbatim>
 
+and the compare the individual resolutions
+<verbatim>
+histIEta25 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && eleIEtaOrX==25")
+fitResIEta25 = fitter.makeDCBFit(histIEta25,0.5,1.5)
+histIEta30 = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && eleIEtaOrX==30")
+fitResIEta30 = fitter.makeDCBFit(histIEta30,0.5,1.5)
+</verbatim>
 
+Now notice we have two different scale shifts aka mean value of the DCB. Lets correct for that so we peak at 1 for both of them.
+<verbatim>
+histIEta25Corr = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn/0.961","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==25)")
+histIEta30Corr = HistFuncs::makeHist(dyTree2018,100,0,2,"eleSCRawEn/eleGenEn/0.971","eleGenEn>0 && eleGenEn>30 && eleRegion==0 && (eleIEtaOrX==30)")
+</verbatim>
+If you fit them, we now peak at one. Lets now fit the combined energy
+
+<verbatim>
+histIEta25Corr->Add(histIEta30Corr)
+fitResCorr = fitter.makeDCBFit(histIEta25Corr,0.5,1.5)
+fitResCorr.plot->Draw()
+</verbatim>
+
+Now compare the sigma values for the incorrected vs corrected energies. Our resolution has improved from 2.2% to 2.0% because we no longer have two populations with different scales. We can go through finding all the electron categories with different scales and then correct the scale for each one. Or...we can just run our ML algo to do that for us :) This is exactly what the our ML algo is doing, its fitting a DCB to populations of electrons and trying to estimate the mean and the sigma for given electron so each electron is corrected to its correct scale improving our resolution. This is the energy correction. 
 
 
 We will now look at the corrected energy variables 
@@ -178,15 +171,42 @@ eleCalibEn_             .push_back(iEle->userFloat("ecalTrkEnergyPostCorr"));
 
 Lets first have a look at them and how they differ to their uncorrected values. Plot eleCalibEcalEn/eleEcalEn and eleCalibEn/eleEn for both data and MC. What do you notice? Can you explain the differences?
      
-Now lets compare data and MC. To do this we will use a new set of ntuples to simplify things. These ntuples are generated from our ggNtuples but instead of each branch being a vector of entries with each entry corresponding to a given electron, we now have single entry branches corresponding to ele1 and ele2, our first and second electron in a pair plus a mass. This makes it much easier and faster to compare a mass spectrum. Now our branch names are different, instead of "eleX" its "ele1X" and "ele2X". Each event can have multiple entries in the tree such that all possible electron pairs are represented. 
+Now lets compare data and MC. To do this we will use a new set of ntuples to simplify things. These ntuples are generated from our ggNtuples but instead of each branch being a vector of entries with each entry corresponding to a given electron, we now have single entry branches corresponding to ele1 and ele2, our first and second electron in a pair plus a mass. This makes it much easier and faster to compare a mass spectrum. Now our branch names are different, instead of "eleX" its "ele1X" and "ele2X". Each event can have multiple entries in the tree such that all possible electron pairs are represented.  We are also swapping years, from 2018 to 2017. This is because the initial calibration in 2017 was not as good as 2018 so it demonstrates the change more.  We select HLT_Ele23_Ele12 triggered events.
 
+<verbatim>
+dy2017Tree = HistFuncs::makeChain("EventMassTree","/eos/cms/store/group/phys_egamma/CMSPOS2019/ntuples/GGMassNtup/dyJets_94X_massTreeV2.root");
+data2017Tree = HistFuncs::makeChain("EventMassTree","/eos/cms/store/group/phys_egamma/CMSPOS2019/ntuples/GGMassNtup/doubleEG_run2017D_massTreeV2.root");
 
+dataHist = HistFuncs::makeHist(data2017Tree,70,50,120,"mass","(ele1IDbit&0x4)!=0 && (ele2IDbit&0x4)!=0 && ele1Pt>25 && ele2Pt>25");
+mcHist = HistFuncs::makeHist(dy2017Tree,70,50,120,"mass","(ele1IDbit&0x4)!=0 && (ele2IDbit&0x4)!=0 && ele1Pt>25 && ele2Pt>25");
+mcHist->SetTitle(";m(ee) [GeV];#events");
+mcHist->Scale(dataHist->Integral()/mcHist->Integral())
+mcHist->SetLineColor(kOrange+7);
+mcHist->SetLineWidth(2);
+mcHist->Draw("HIST");
+dataHist->SetMarkerStyle(8);
+dataHist->SetMarkerColor(kBlue+2);
+dataHist->SetLineColor(kBlue+2);
+dataHist->Draw("SAME EP");
 
+</verbatim>
+
+Now we can apply a given energy to the mass by doing
+<verbatim>
+mass*sqrt(ele1CalibEn/ele1En*ele2CalibEn/ele2En)
+</verbatim>
+
+where ele1CalibEn and ele2CalibEn can be any calibrated energy. Lets try a comparing the calibrated energies. 
+
+<verbatim>
+dataCalibHist = HistFuncs::makeHist(data2017Tree,70,50,120,"mass*sqrt(ele1CalibEn/ele1En*ele2CalibEn/ele2En)","(ele1IDbit&0x4)!=0 && (ele2IDbit&0x4)!=0 && ele1Pt>25 && ele2Pt>25");
+mcCalibHist = HistFuncs::makeHist(dy2017Tree,70,50,120,"mass*sqrt(ele1CalibEn/ele1En*ele2CalibEn/ele2En)","(ele1IDbit&0x4)!=0 && (ele2IDbit&0x4)!=0 && ele1Pt>25 && ele2Pt>25");
+</verbatim>
 
 Finally lets understand what the error on the energy is. Naively, one would assume that correctedEcalEnergyError() or p4Error() would return the error on the energy. However this is not quite correct. This value is actually sigma_DCB as estimated by our BDT. So it gives a resonable estimate of the resolution as long as it is relatively small. Once it becomes large (>5% of the ecal energy) it is effectively a random number which tells you "this electron is poorly measured".
 
 The energy on the electron scale is actually from the scale and smearing and is a measure of how confident we are that we have calibrated the energy. A discussion of the energy scale uncertainties can be found here [[https://twiki.cern.ch/twiki/bin/view/CMS/EgammaMiniAODV2#Energy_Scale_and_Smearing][EgammaMiniAODV2#Energy_Scale_and_Smearing]]. We have eleScale_stat_up, eleScale_stat_dn, eleScale_syst_up, eleScale_syst_dn, eleScale_gain_up and eleScale_gain_dn. Of these values, the stat error is neglible, the gain error is only important for >100 GeV (and really only >300GeV) so we will focus on the syst error. 
 
-You can now scale the data up and down by syst error  
+You can now scale the data up and down by syst error  and see what changes.
   
 %ENDTWISTY%
